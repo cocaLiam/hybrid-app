@@ -31,27 +31,24 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val people = listOf(
-            "Jo",
-            "Ja",
-            "DJ",
-            "Lu",
-            "Mat",
-            "Jo",
-            "Ja",
-            "DJ",
-            "Lu",
-            "Mat",
-            "Jo",
-            "Ja",
-            "DJ",
-            "Lu",
-            "Mat",
-            "Jo",
-            "Ja",
-            "DJ",
-            "Lu",
-            "Mat"
+//        val people = listOf(
+//            Person("DJ", "Malone", 25),
+//            Person("DJ", "Trampu", 30),
+//            Person("DJ", "DJampu", 29),
+//            Person("DJ", "DJampu", 33),
+//            Person("MB", "Trampu", 36),
+//            Person("MB", "Trampu", 38),
+//            Person("MB", "Trampu", 39),
+//        )
+//
+//        val peopleFiltered = people.filter { it.age >= 30 && it.firstName == "DJ" }
+
+        val rssItems = listOf(
+            RSSItem("welcome","aaaaaaaaaa","text"),
+            RSSItem("welcome","aaaaaaaaaa","text"),
+            RSSItem("welcome","aaaaaaaaaa","text"),
+            RSSItem("welcome","aaaaaaaaaa","text"),
+            RSSItem("welcome","aaaaaaaaaa","text"),
         )
 
         setContent {
@@ -64,9 +61,12 @@ class MainActivity : ComponentActivity() {
 //                        items(people) { person ->
 //                            Text(text = person)
 //                        }
-                        items(people) {
-                            ListItem(it)
-//                            person -> ListItem(person) <- 이거 줄인게 "ListItem(it)" 임
+//                        items(peopleFiltered) {
+//                            CardView(it)
+////                            person -> ListItem(person) <- 이거 줄인게 "ListItem(it)" 임
+//                        }
+                        items(rssItems) {
+                            RSSItemText(it)
                         }
                     }
                 }
@@ -91,7 +91,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ListItem(name: String) {
+fun CardView(person: Person) {
     Card(
         modifier = Modifier
             .fillMaxSize()
@@ -107,9 +107,38 @@ fun ListItem(name: String) {
                     .width(100.dp)
                     .height(100.dp)
             )
-            Text(
-                text = name, modifier = Modifier.padding(24.dp)
-            );
+            Column {
+                Text(
+                    text = person.firstName + " " + person.lastName,
+                    modifier = Modifier.padding(top = 15.dp)
+                )
+                Text(
+                    text = "age : " + person.age, modifier = Modifier.padding(0.dp)
+                )
+            }
         }
     }
 }
+
+@Composable
+fun RSSItemText(){
+    Card(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp)
+    ) {
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
