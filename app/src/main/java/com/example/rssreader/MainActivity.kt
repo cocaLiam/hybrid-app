@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 //
 import com.example.rssreader.ui.theme.RSSReaderTheme
+import kotlin.reflect.typeOf
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,11 +45,11 @@ class MainActivity : ComponentActivity() {
 //        val peopleFiltered = people.filter { it.age >= 30 && it.firstName == "DJ" }
 
         val rssItems = listOf(
-            RSSItem("welcome","aaaaaaaaaa","text"),
-            RSSItem("welcome","aaaaaaaaaa","text"),
-            RSSItem("welcome","aaaaaaaaaa","text"),
-            RSSItem("welcome","aaaaaaaaaa","text"),
-            RSSItem("welcome","aaaaaaaaaa","text"),
+            RSSItem("welcome", "aaaaaaaaaa", RSSType.TEXT),
+            RSSItem("welcome", "bbbbbbbbbb", RSSType.IMAGE),
+            RSSItem("welcome", "cccccccccc", RSSType.TEXT),
+            RSSItem("welcome", "dddddddddd", RSSType.VIDEO),
+            RSSItem("welcome", "eeeeeeeeee", RSSType.TEXT),
         )
 
         setContent {
@@ -66,7 +67,12 @@ class MainActivity : ComponentActivity() {
 ////                            person -> ListItem(person) <- 이거 줄인게 "ListItem(it)" 임
 //                        }
                         items(rssItems) {
-                            RSSItemText(it)
+                            when (it.type) {
+                                RSSType.TEXT -> RSSItemText(it)
+                                RSSType.IMAGE -> RSSItemImage(it)
+                                RSSType.VIDEO -> RSSItemVideo(it)
+                                else -> "Unknown"
+                            }
                         }
                     }
                 }
@@ -121,16 +127,62 @@ fun CardView(person: Person) {
 }
 
 @Composable
-fun RSSItemText(){
+fun RSSItemText(items: RSSItem) {
     Card(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp)
     ) {
-
+        Text(
+            text = items.title,
+            modifier = Modifier.padding(12.dp)
+        )
     }
 }
 
+@Composable
+fun RSSItemImage(items: RSSItem) {
+    Card(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp)
+    ) {
+        Text(
+            text = "Click the Image",
+            modifier = Modifier.fillMaxSize()
+        )
+        Image(
+// R <- Resource(res), drawable <- 디렉토리명, baseline_person_24 <- 파일명
+            painter = painterResource(id = R.drawable.baseline_person_24),
+            contentDescription = "Photo of person",
+            modifier = Modifier
+                .width(50.dp)
+                .height(50.dp)
+        )
+    }
+}
+
+@Composable
+fun RSSItemVideo(items: RSSItem) {
+    Card(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp)
+    ) {
+        Text(
+            text = "Click the Video",
+            modifier = Modifier.fillMaxSize()
+        )
+        Image(
+// R <- Resource(res), drawable <- 디렉토리명, baseline_person_24 <- 파일명
+            painter = painterResource(id = R.drawable.baseline_person_24),
+            contentDescription = "Photo of person",
+            modifier = Modifier
+                .width(50.dp)
+                .height(50.dp)
+        )
+    }
+}
 
 
 
