@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 상단에 공간을 차지할 TextView -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="APP"
+        android:padding="16dp"
+        android:textSize="18sp"
+        android:gravity="center" />
+
+    <!-- WebView의 높이를 조정하여 전체를 차지하지 않도록 설정 -->
+    <WebView
+        android:id="@+id/webview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- 여기에 다른 UI 요소들이 있을 수 있습니다 -->
+</LinearLayout>
