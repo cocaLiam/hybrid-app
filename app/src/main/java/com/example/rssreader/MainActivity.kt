@@ -1,9 +1,23 @@
 package com.example.rssreader
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.util.Log
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+
+
+//  블루투스 권한 요청에 필요 한 import
+import android.app.Activity
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+//
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,170 +41,104 @@ import androidx.compose.ui.unit.dp
 import com.example.rssreader.ui.theme.RSSReaderTheme
 import kotlin.reflect.typeOf
 
+
+//// 사용자 정의 정수 [ 0 이상이면 Ok ]
+//const val REQUEST_ENABLE_BT = 100
+//
+//class MainActivity : ComponentActivity() {
+//
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        enableEdgeToEdge()
+//        setContentView(R.layout.activity_main)
+//
+////        // 블루투스 클래식 기능이 핸드폰에 있는지 확인
+////        val bluetoothAvailable = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
+//
+//        // BLE 기능이 핸드폰에 있는지 확인
+//        val bluetoothLEAvailable = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+//        Log.i(" - MainActivity", "블루투스 기능이 있는지 : $bluetoothLEAvailable")
+//
+//        val bluetoothManager: BluetoothManager = getSystemService(BluetoothManager::class.java)
+//        val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.getAdapter()
+//        if (bluetoothAdapter == null) {
+//            // Device doesn't support Bluetooth
+//            Log.e(" - MainActivity", "블루투스 기능 없음")
+//            System.exit(0)
+//        }
+//
+//        Log.i(" - MainActivity", "블루투스 상태 : ${bluetoothAdapter?.isEnabled} << false면 Off")
+//        if (bluetoothAdapter?.isEnabled == false) {
+//            // 권장사항이 아님
+//            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+//            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+//            Log.i(" - MainActivity", "블루투스가 활성화 : ${enableBtIntent}")
+////            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+////            enableBluetoothLauncher.launch(enableBtIntent)
+//        }
+//    }
+//
+//}
+
+
+
+
+
+
+
+
+
 class MainActivity : ComponentActivity() {
+    // 1. ActivityResultLauncher를 클래스의 멤버 변수로 선언합니다.
+    private lateinit var enableBluetoothLauncher: ActivityResultLauncher<Intent>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        setContentView(R.layout.activity_main)
 
-//        val people = listOf(
-//            Person("DJ", "Malone", 25),
-//            Person("DJ", "Trampu", 30),
-//            Person("DJ", "DJampu", 29),
-//            Person("DJ", "DJampu", 33),
-//            Person("MB", "Trampu", 36),
-//            Person("MB", "Trampu", 38),
-//            Person("MB", "Trampu", 39),
-//        )
-//
-//        val peopleFiltered = people.filter { it.age >= 30 && it.firstName == "DJ" }
+//        // 블루투스 클래식 기능이 핸드폰에 있는지 확인
+//        val bluetoothAvailable = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
 
-        val rssItems = listOf(
-            RSSItem("welcome", "aaaaaaaaaa", RSSType.TEXT),
-            RSSItem("welcome", "bbbbbbbbbb", RSSType.IMAGE),
-            RSSItem("welcome", "cccccccccc", RSSType.TEXT),
-            RSSItem("welcome", "dddddddddd", RSSType.VIDEO),
-            RSSItem("welcome", "eeeeeeeeee", RSSType.TEXT),
+        // 1. 기기의 BLE 지원 여부 확인
+        val bluetoothLEAvailable = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+        if (!bluetoothLEAvailable){
+            Log.e(" - MainActivity", "기기의 BLE 지원 여부 확인 : $bluetoothLEAvailable")
+        }
+
+        // 2. 기기의 BLE 및 Bluetooth Classic 기능 지원 여부 확인
+        val bluetoothManager: BluetoothManager = getSystemService(BluetoothManager::class.java)
+        val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.getAdapter()
+        if (bluetoothAdapter == null) {
+            // Device doesn't support Bluetooth
+            Log.e(" - MainActivity", "기기의 BLE 및 Bluetooth Classic 기능 지원 여부 확인 : $bluetoothAdapter")
+        }
+
+        // 3_1. registerForActivityResult 함수로 결과를 처리할 콜백을 등록
+        enableBluetoothLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult(),
+            ::handleBluetoothIntentResult // 콜백 함수 참조
         )
 
-        setContent {
-            RSSReaderTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android", modifier = Modifier.padding(innerPadding)
-                    )
-                    LazyColumn {
-//                        items(people) { person ->
-//                            Text(text = person)
-//                        }
-//                        items(peopleFiltered) {
-//                            CardView(it)
-////                            person -> ListItem(person) <- 이거 줄인게 "ListItem(it)" 임
-//                        }
-                        items(rssItems) {
-                            when (it.type) {
-                                RSSType.TEXT -> RSSItemText(it)
-                                RSSType.IMAGE -> RSSItemImage(it)
-                                RSSType.VIDEO -> RSSItemVideo(it)
-                                else -> "Unknown"
-                            }
-                        }
-                    }
-                }
-            }
+        // 3_2. Bluetooth 가 비활성화된 경우 활성화를 요청
+//        val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
+        if (bluetoothAdapter?.isEnabled == false) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            enableBluetoothLauncher.launch(enableBtIntent)
+            Log.i(" - MainActivity", "블루투스 활성화 요청: $enableBtIntent")
+
         }
     }
 
-    @Composable
-    fun Greeting(name: String, modifier: Modifier = Modifier) {
-        Text(
-            text = "Hello $name!", modifier = modifier
-        )
-    }
-
-    @Preview(showBackground = true)
-    @Composable
-    fun GreetingPreview() {
-        RSSReaderTheme {
-            Greeting("Android")
+    // 3_1 블루투스 활성화 콜백함수
+    private fun handleBluetoothIntentResult(result: ActivityResult) {
+        if (result.resultCode == Activity.RESULT_OK) {
+            // Bluetooth가 활성화되었습니다.
+            Log.i(" - MainActivity", "블루투스가 활성화되었습니다.")
+        } else {
+            // Bluetooth 활성화가 취소되었습니다.
+            Log.i(" - MainActivity", "블루투스 활성화가 취소되었습니다.")
         }
     }
+
 }
-
-@Composable
-fun CardView(person: Person) {
-    Card(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-//        Column {
-        Row {
-            Image(
-                // R <- Resource(res), drawable <- 디렉토리명, baseline_person_24 <- 파일명
-                painter = painterResource(id = R.drawable.baseline_person_24),
-                contentDescription = "Photo of person",
-                modifier = Modifier
-                    .width(100.dp)
-                    .height(100.dp)
-            )
-            Column {
-                Text(
-                    text = person.firstName + " " + person.lastName,
-                    modifier = Modifier.padding(top = 15.dp)
-                )
-                Text(
-                    text = "age : " + person.age, modifier = Modifier.padding(0.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun RSSItemText(items: RSSItem) {
-    Card(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-        Text(
-            text = items.title,
-            modifier = Modifier.padding(12.dp)
-        )
-    }
-}
-
-@Composable
-fun RSSItemImage(items: RSSItem) {
-    Card(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-        Text(
-            text = "Click the Image",
-            modifier = Modifier.fillMaxSize()
-        )
-        Image(
-// R <- Resource(res), drawable <- 디렉토리명, baseline_person_24 <- 파일명
-            painter = painterResource(id = R.drawable.baseline_person_24),
-            contentDescription = "Photo of person",
-            modifier = Modifier
-                .width(50.dp)
-                .height(50.dp)
-        )
-    }
-}
-
-@Composable
-fun RSSItemVideo(items: RSSItem) {
-    Card(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-        Text(
-            text = "Click the Video",
-            modifier = Modifier.fillMaxSize()
-        )
-        Image(
-// R <- Resource(res), drawable <- 디렉토리명, baseline_person_24 <- 파일명
-            painter = painterResource(id = R.drawable.baseline_person_24),
-            contentDescription = "Photo of person",
-            modifier = Modifier
-                .width(50.dp)
-                .height(50.dp)
-        )
-    }
-}
-
-
-
-
-
-
-
-
-
-
-

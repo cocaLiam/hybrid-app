@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "RSS Reader"
+rootProject.name = "BLE Tutorial App"
 include(":app")
  
