@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "RSS Reader"
+rootProject.name = "cocabot APP"
 include(":app")
  
