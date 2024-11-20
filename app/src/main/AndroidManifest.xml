@@ -3,8 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- 이전 기기에서 레거시 Bluetooth 권한 요청 -->
-    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+<!--    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />-->
+<!--    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />-->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
 <!--    Android 10(API 레벨 29) 또는 Android 11 인 경우, 백그라운드에서 Bluetooth 을 하려면 해당 위치 권한이 필요함.-->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
@@ -23,14 +25,10 @@
     앱이 이미 페어링된 Bluetooth 기기와 통신하는 경우에만 필요합니다. -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
-<!--    &lt;!&ndash; BLE Central 역할-->
-<!--    앱이 Bluetooth 검색 결과를 사용하여 물리적 위치를 유도하는 경우에만 필요합니다. &ndash;&gt;-->
-<!--    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />-->
-
-<!--    &lt;!&ndash; BLE Central 역할 다른 git Code-->
-<!--    BLE 스캔을 위해 위치 권한이 필요합니다. &ndash;&gt;-->
-<!--    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
-<!--    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />-->
+    <!-- BLE Central 역할 다른 git Code
+    BLE 스캔을 위해 위치 권한이 필요합니다. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
 <!--    &lt;!&ndash;    앱에 블루투스 클래식이 필요하다고 표시하는 방법&ndash;&gt;-->
 <!--    <uses-feature android:name="android.hardware.bluetooth" android:required="true"/>-->

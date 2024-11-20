@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">BLE Tutorial App</string>
+    <string name="device_image_desc">BLE Device</string>
+    <string name="device_name">Device Name</string>
 </resources>
