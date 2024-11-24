@@ -1,30 +1,32 @@
+// 각종 OS 및 개발 핸들러
 package com.example.rssreader
-
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
-
+import android.Manifest
+import android.app.Activity
+import android.os.Handler
 import android.os.Bundle
+
+// UI 관련
+import androidx.recyclerview.widget.RecyclerView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+
+// 기능 관련
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-
-
-//  블루투스 권한 요청에 필요 한 import
-import android.app.Activity
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+
+//  블루투스 권한 요청에 필요 한 import
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
-import android.os.Handler
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import android.Manifest
-import androidx.recyclerview.widget.RecyclerView
 
 // Custom Package
 import com.example.rssreader.bleModules.LeDeviceListAdapter
@@ -53,10 +55,10 @@ class MainActivity : ComponentActivity() {
         // 0. BluetoothManager 및 BluetoothAdapter 초기화
         // getSystemService는 Context가 완전히 초기화된 후에 호출되어야 함
         bluetoothManager   = getSystemService(BluetoothManager::class.java)
-        bluetoothAdapter   = bluetoothManager.getAdapter()  // 이전 버전
-//        bluetoothAdapter   = bluetoothManager.adapter
-        bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner()
-//        bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+//        bluetoothAdapter   = bluetoothManager.getAdapter()  // 이전 버전
+        bluetoothAdapter   = bluetoothManager.adapter
+//        bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner()   // 이전 버전
+        bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
 
         val recyclerView: RecyclerView = findViewById(R.id.recyclerView)
         Log.i(" - MainActivity", "recyclerView.adapter : ${recyclerView.adapter}")
