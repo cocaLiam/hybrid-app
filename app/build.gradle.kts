@@ -51,6 +51,9 @@ dependencies {
     implementation(libs.androidx.material3)
 //    implementation(libs.androidx.recyclerview)
     implementation("androidx.recyclerview:recyclerview:1.2.1")
+//    implementation(libs.androidx.appcompat)
+    implementation("androidx.appcompat:appcompat:1.6.1") // 최신 버전 사용
+    implementation("com.google.android.material:material:1.9.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

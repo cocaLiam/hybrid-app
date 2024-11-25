@@ -1,17 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto"
-android:orientation="vertical"
-android:layout_width="match_parent"
-android:layout_height="match_parent">
-
-<androidx.recyclerview.widget.RecyclerView
-    android:id="@+id/recyclerView"
-    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"/>
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
 
-</LinearLayout>
+    <!-- Scan Start 버튼 -->
+    <Button
+        android:id="@+id/btn_scan_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        android:text="Scan Start"
+        android:background="@android:color/holo_blue_light"
+        android:textColor="@android:color/white"
+        android:padding="10dp"
+        android:textSize="16sp"
+        android:visibility="visible"/>
+
+</RelativeLayout>
+
+<!--<?xml version="1.0" encoding="utf-8"?>-->
+<!--<RelativeLayout-->
+<!--    xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    android:id="@+id/root_layout"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="match_parent"-->
+<!--    android:background="#FFFFFF">-->
+
+<!--    &lt;!&ndash; Scan Start 버튼 &ndash;&gt;-->
+<!--    <Button-->
+<!--        android:id="@+id/btn_scan_start"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_centerHorizontal="true"-->
+<!--        android:layout_marginTop="50dp"-->
+<!--        android:text="Scan Start"-->
+<!--        android:background="@android:color/holo_blue_light"-->
+<!--        android:textColor="@android:color/white"-->
+<!--        android:padding="10dp"-->
+<!--        android:textSize="16sp" />-->
+
+<!--</RelativeLayout>-->
 
 
+    <!--<?xml version="1.0" encoding="utf-8"?>-->
+<!--<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
+<!--android:orientation="vertical"-->
+<!--android:layout_width="match_parent"-->
+<!--android:layout_height="match_parent">-->
 
+<!--<androidx.recyclerview.widget.RecyclerView-->
+<!--    android:id="@+id/recyclerView"-->
+<!--    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="match_parent"/>-->
+
+<!--</LinearLayout>-->
