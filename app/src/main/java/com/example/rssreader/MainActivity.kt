@@ -132,6 +132,8 @@ class MainActivity : AppCompatActivity() {
         popupContainer.visibility = View.VISIBLE
 
         // 10초 후 스캔 중지
+        Log.i(" - MainActivity", "스캔 타임아웃 제한시간 : ${SCAN_PERIOD/1000}초 ")
+
         popupContainer.postDelayed({
             stopBleScan()
             Toast.makeText(this, "Scan stopped after 10 seconds", Toast.LENGTH_SHORT).show()
