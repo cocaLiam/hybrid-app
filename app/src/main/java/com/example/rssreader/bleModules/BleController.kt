@@ -6,35 +6,23 @@ import android.util.Log
 import android.Manifest
 import android.app.Activity
 import android.os.Handler
-import android.os.Bundle
 
 // UI 관련
-import androidx.recyclerview.widget.RecyclerView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
 // 기능 관련
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 
 //  블루투스 권한 요청에 필요 한 import
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanResult
 import android.content.Context
-import android.view.View
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.Toast
-
-// Custom Package
-import com.example.rssreader.bleModules.LeDeviceListAdapter
 
 class BleController(private val applicationContext: Context) {
     // 1. ActivityResultLauncher를 클래스의 멤버 변수로 선언합니다.
@@ -42,12 +30,10 @@ class BleController(private val applicationContext: Context) {
     private lateinit var bluetoothManager   : BluetoothManager
     private lateinit var bluetoothAdapter   : BluetoothAdapter
     private lateinit var bluetoothLeScanner : BluetoothLeScanner
-    private var scanning = false
-    private val handler = Handler()
-    private val leDeviceListAdapter = LeDeviceListAdapter()
 
     // Stops scanning after 10 seconds.
     private val SCAN_PERIOD: Long = 10000
+    private val BLECONT_LOG_TAG = " - BleController"
     private val mutableMap = mutableMapOf("블루투스 권한" to false,
         "위치 권한" to false)
 
@@ -72,7 +58,7 @@ class BleController(private val applicationContext: Context) {
         // 1. 기기의 BLE 지원 여부 확인
         val bluetoothLEAvailable = applicationContext.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
         if (!bluetoothLEAvailable){
-            Log.e(" - BleController", "기기의 BLE 지원 여부 확인 : $bluetoothLEAvailable")
+            Log.e(BLECONT_LOG_TAG, "기기의 BLE 지원 여부 확인 : $bluetoothLEAvailable")
             //TODO: 현재기기 사용불가 에러 핸들링 표시 필요
         }
 
@@ -81,7 +67,7 @@ class BleController(private val applicationContext: Context) {
 //        val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.getAdapter()
         if (bluetoothAdapter == null) {
             // Device doesn't support Bluetooth
-            Log.e(" - BleController", "기기의 BLE 및 Bluetooth Classic 기능 지원 여부 확인 : $bluetoothAdapter")
+            Log.e(BLECONT_LOG_TAG, "기기의 BLE 및 Bluetooth Classic 기능 지원 여부 확인 : $bluetoothAdapter")
             //TODO: 현재기기 사용불가 에러 핸들링 표시 필요
         }
     }
@@ -106,7 +92,7 @@ class BleController(private val applicationContext: Context) {
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 100
             )
-            Log.i(" - BleController", "locationOk : ${locationOk}")
+            Log.i(BLECONT_LOG_TAG, "locationOk : ${locationOk}")
             // TODO : LOCATION 권한 허용 안한 상황에 대한 핸들링 코드 필요
             mutableMap["위치 권한"] = true
         } else mutableMap["위치 권한"] = true
@@ -120,7 +106,7 @@ class BleController(private val applicationContext: Context) {
         bluetoothAdapter?.bluetoothLeScanner?.startScan(scanCallback)
 
         // 10초 후 스캔 중지
-        Log.i(" - BleController", "스캔 타임아웃 제한시간 : ${SCAN_PERIOD / 1000}초 ")
+        Log.i(BLECONT_LOG_TAG, "스캔 타임아웃 제한시간 : ${SCAN_PERIOD / 1000}초 ")
         when (popupContainer) {
             is LinearLayout -> {
                 popupContainer.postDelayed({
@@ -130,7 +116,7 @@ class BleController(private val applicationContext: Context) {
             }
             is Handler -> {
                 popupContainer.postDelayed({ // SCAN_PERIOD 시간후에 발동되는 지연 함수
-                    Log.w(" - MainActivity", "--스캔 타임아웃-- ")
+                    Log.w(BLECONT_LOG_TAG, "--스캔 타임아웃-- ")
                     bluetoothLeScanner?.stopScan(scanCallback)
                 }, SCAN_PERIOD)
             }
@@ -141,9 +127,9 @@ class BleController(private val applicationContext: Context) {
         bluetoothAdapter?.bluetoothLeScanner?.apply {
             try {
                 bluetoothAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
-                Log.e(" - MainActivity", "블루투스 스캔 정지 ")
+                Log.e(BLECONT_LOG_TAG, "블루투스 스캔 정지 ")
             } catch (e: Exception) {
-                Log.e("MainActivity", "Failed to stop BLE scan: ${e.message}")
+                Log.e(BLECONT_LOG_TAG, "Failed to stop BLE scan: ${e.message}")
             }
         }
     }
@@ -152,11 +138,11 @@ class BleController(private val applicationContext: Context) {
         // 특정 작업(예: 권한 요청, 다른 Activity 호출 등)의 결과를 처리할 Callback 함수
         if (result.resultCode == Activity.RESULT_OK) {
             // Bluetooth가 활성화되었습니다.
-            Log.i(" - BleController", "블루투스가 활성화되었습니다.")
+            Log.i(BLECONT_LOG_TAG, "블루투스가 활성화되었습니다.")
             mutableMap["블루투스 권한"] = true
         } else {
             // Bluetooth 활성화가 취소되었습니다.
-            Log.i(" - BleController", "블루투스 활성화가 취소되었습니다.")
+            Log.i(BLECONT_LOG_TAG, "블루투스 활성화가 취소되었습니다.")
             mutableMap["블루투스 권한"] = false
         }
     }

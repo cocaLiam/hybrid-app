@@ -1,21 +1,15 @@
 // 각종 OS 및 개발 핸들러
 package com.example.rssreader
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.util.Log
-import android.Manifest
-import android.app.Activity
 import android.os.Handler
 import android.os.Bundle
 
 // UI 관련
 import androidx.recyclerview.widget.RecyclerView
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 
 // 기능 관련
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -41,13 +35,10 @@ class MainActivity : ComponentActivity() {
     private lateinit var bluetoothManager   : BluetoothManager
     private lateinit var bluetoothAdapter   : BluetoothAdapter
     private lateinit var bluetoothLeScanner : BluetoothLeScanner
-    private var scanning = false
     private val handler = Handler()
     private val leDeviceListAdapter = LeDeviceListAdapter()
 
-    // Stops scanning after 10 seconds.
-    private val SCAN_PERIOD: Long = 10000
-    private val REQUEST_LOCATION_PERMISSION = 1
+    private val MAIN_LOG_TAG = " - MainActivity "
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,8 +50,8 @@ class MainActivity : ComponentActivity() {
         bleController.setBleModules()
 
         val recyclerView: RecyclerView = findViewById(R.id.recyclerView)
-        Log.i(" - MainActivity", "recyclerView.adapter : ${recyclerView.adapter}")
-        Log.i(" - MainActivity", "leDeviceListAdapter : ${leDeviceListAdapter}")
+        Log.i(MAIN_LOG_TAG, "recyclerView.adapter : ${recyclerView.adapter}")
+        Log.i(MAIN_LOG_TAG, "leDeviceListAdapter : ${leDeviceListAdapter}")
         recyclerView.adapter = leDeviceListAdapter
 
         // 2_1. 권한요청 Launcher 등록
@@ -85,7 +76,7 @@ class MainActivity : ComponentActivity() {
         val permissionOk = bleController.requestBlePermission(this)
         for ((key, value) in permissionOk) {
             if (!value){
-                Log.e(" - MainActivity", "권한 없음 : ${key}")
+                Log.e(MAIN_LOG_TAG, "권한 없음 : ${key}")
                 Toast.makeText(this, "${key}이 활성화되지 않았습니다.", Toast.LENGTH_SHORT).show()
                 return
             }
@@ -102,32 +93,6 @@ class MainActivity : ComponentActivity() {
             super.onScanResult(callbackType, result)
             leDeviceListAdapter.addDevice(result.device)
             leDeviceListAdapter.notifyDataSetChanged() // 데이터 변경 알림
-        }
-    }
-
-    // 4_2 블루투스 스캔 함수 정의
-    private fun scanLeDevice() {
-        Log.i(" - MainActivity", "scanning 상태: $scanning")
-        if (bluetoothLeScanner == null){
-            Log.w(" - MainActivity", "블루투스 생성 이전에 호출 에러처리")
-            return
-        }
-        Log.i(" - MainActivity", "bluetoothLeScanner:  ${bluetoothLeScanner}")
-        if (!scanning) { // 타임아웃 스캔 시작
-            Log.i(" - MainActivity", "스캔 타임아웃 제한시간 : ${SCAN_PERIOD/1000}초 ")
-            handler.postDelayed({ // SCAN_PERIOD 시간후에 발동되는 지연 함수
-                scanning = false
-                Log.w(" - MainActivity", "--스캔 타임아웃-- ")
-                bluetoothLeScanner?.stopScan(leScanCallback)
-            }, SCAN_PERIOD)
-            scanning = true
-            Log.i(" - MainActivity", "스캔 시작 ")
-            bluetoothLeScanner?.startScan(leScanCallback)
-        } else {  // 현재 스캔 종료 처리
-            Log.i(" - MainActivity", "스캔 취소 1 ")
-            scanning = false
-            bluetoothLeScanner?.stopScan(leScanCallback)
-            Log.i(" - MainActivity", "스캔 취소 2 ")
         }
     }
 
