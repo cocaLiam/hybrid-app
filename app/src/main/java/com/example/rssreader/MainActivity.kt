@@ -27,9 +27,11 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
+import android.widget.Toast
 
 // Custom Package
 import com.example.rssreader.bleModules.LeDeviceListAdapter
+import com.example.rssreader.bleModules.BleController
 
 
 
@@ -52,65 +54,45 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        // 0. BluetoothManager 및 BluetoothAdapter 초기화
-        // getSystemService는 Context가 완전히 초기화된 후에 호출되어야 함
-        bluetoothManager   = getSystemService(BluetoothManager::class.java)
-//        bluetoothAdapter   = bluetoothManager.getAdapter()  // 이전 버전
-        bluetoothAdapter   = bluetoothManager.adapter
-//        bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner()   // 이전 버전
-        bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+        // 1. BluetoothManager 및 BluetoothAdapter 초기화
+        val bleController = BleController(this) // MainActivity는 Context를 상속받음
+        bleController.setBleModules()
 
         val recyclerView: RecyclerView = findViewById(R.id.recyclerView)
         Log.i(" - MainActivity", "recyclerView.adapter : ${recyclerView.adapter}")
         Log.i(" - MainActivity", "leDeviceListAdapter : ${leDeviceListAdapter}")
         recyclerView.adapter = leDeviceListAdapter
 
-//        // 블루투스 클래식 기능이 핸드폰에 있는지 확인
-//        val bluetoothAvailable = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
-
-        // 1. 기기의 BLE 지원 여부 확인
-        val bluetoothLEAvailable = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
-        if (!bluetoothLEAvailable){
-            Log.e(" - MainActivity", "기기의 BLE 지원 여부 확인 : $bluetoothLEAvailable")
-            //TODO: 현재기기 사용불가 에러 핸들링 표시 필요
-        }
-
-        // 2. 기기의 BLE 및 Bluetooth Classic 기능 지원 여부 확인
-//        val bluetoothManager: BluetoothManager = getSystemService(BluetoothManager::class.java)
-//        val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.getAdapter()
-        if (bluetoothAdapter == null) {
-            // Device doesn't support Bluetooth
-            Log.e(" - MainActivity", "기기의 BLE 및 Bluetooth Classic 기능 지원 여부 확인 : $bluetoothAdapter")
-            //TODO: 현재기기 사용불가 에러 핸들링 표시 필요
-        }
-
-        // 3_1. registerForActivityResult 함수로 결과를 처리할 콜백을 등록
+        // 2_1. 권한요청 Launcher 등록
+//        registerForActivityResult 설명 >>
+//        Activity나 Fragment의 생명주기에 맞춰 실행되는 결과 처리 메커니즘을 제공하는 함수
+//        특정 작업(예: 권한 요청, 다른 Activity 호출 등)의 결과를 비동기적으로 처리하기 위해 사용됨
         enableBluetoothLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult(),
-            ::handleBluetoothIntentResult // 콜백 함수 참조
+            { result: ActivityResult ->
+                // 결과를 bleController로 전달
+                bleController.handleBluetoothIntentResult(result)
+            }
         )
 
-        // 3_2. Bluetooth 가 비활성화된 경우 활성화를 요청
-//        val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
-        if (bluetoothAdapter?.isEnabled == false) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            enableBluetoothLauncher.launch(enableBtIntent)
-        }else{
-            // 4_4 Bluetooth가 이미 활성화된 경우 스캔 시작
-            checkPermissions()
-        }
-        Log.e(" - MainActivity", "앱 END Point")
-    }
+        // 2_2. Launcher 객체 BleController 에 전달
+        bleController.setBlePermissionLauncher(enableBluetoothLauncher)
 
-    // 3_1 블루투스 활성화 콜백함수
-    private fun handleBluetoothIntentResult(result: ActivityResult) {
-        if (result.resultCode == Activity.RESULT_OK) {
-            // Bluetooth가 활성화되었습니다.
-            Log.i(" - MainActivity", "블루투스가 활성화되었습니다.")
-        } else {
-            // Bluetooth 활성화가 취소되었습니다.
-            Log.i(" - MainActivity", "블루투스 활성화가 취소되었습니다.")
+        // 3. BLE 기능 검사
+        bleController.checkBleOperator()
+
+        // 4. Bluetooth 가 비활성화 된 경우 활성화 요청
+        val permissionOk = bleController.requestBlePermission(this)
+        for ((key, value) in permissionOk) {
+            if (!value){
+                Log.e(" - MainActivity", "권한 없음 : ${key}")
+                Toast.makeText(this, "${key}이 활성화되지 않았습니다.", Toast.LENGTH_SHORT).show()
+                return
+            }
         }
+
+        // 5
+        bleController.startBleScan(leScanCallback, handler)
     }
 
     // 4_1 블루투스 스캔 콜백 함수 등록
@@ -146,16 +128,6 @@ class MainActivity : ComponentActivity() {
             scanning = false
             bluetoothLeScanner?.stopScan(leScanCallback)
             Log.i(" - MainActivity", "스캔 취소 2 ")
-        }
-    }
-
-    // 4_3 블루투스 스캔전 LOCATION 권한 검사
-    private fun checkPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_LOCATION_PERMISSION)
-        } else {
-            // 권한이 이미 허용된 경우 BLE 스캔 시작
-            scanLeDevice()
         }
     }
 
