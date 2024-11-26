@@ -2,7 +2,6 @@ package com.example.rssreader
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.pm.PackageManager
@@ -17,17 +16,17 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.rssreader.bleModules.ScanListAdapter
 
 class MainActivity : AppCompatActivity() {
 
     private val bluetoothAdapter: BluetoothAdapter? by lazy { BluetoothAdapter.getDefaultAdapter() }
+    private var scanListAdapter: ScanListAdapter = ScanListAdapter()
     private var isPopupVisible = false
     // Stops scanning after 10 seconds.
     private val SCAN_PERIOD: Long = 10000
-    private lateinit var scanListAdapter: ScanListAdapter
+    private val MAIN_LOG_TAG = " - MainActivity "
 
     // View 변수 선언
     private lateinit var btnScanStart: Button
@@ -62,7 +61,6 @@ class MainActivity : AppCompatActivity() {
         recyclerScanList = popupView.findViewById(R.id.recycler_scan_list)
 
         // RecyclerView 초기화
-        scanListAdapter = ScanListAdapter()
         scanListAdapter.setupRecyclerView(recyclerScanList, this@MainActivity)
 
         // 팝업을 루트 레이아웃에 추가
@@ -71,10 +69,10 @@ class MainActivity : AppCompatActivity() {
         // Scan Start 버튼 클릭 리스너
         btnScanStart.setOnClickListener {
             if (checkPermissions()) {
-                Log.i(" -- ", " SCANING --")
+                Log.i(MAIN_LOG_TAG, " SCANING --")
                 startBleScan()
             } else {
-                Log.i(" -- ", " Pemission Requseting --")
+                Log.i(MAIN_LOG_TAG, " Pemission Requseting --")
                 requestPermissions()
             }
         }
@@ -98,21 +96,21 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.i(" - MainActivity TODO LIST", "onDestroy")
+        Log.i(MAIN_LOG_TAG, "onDestroy")
         stopBleScan() // 스캔 중지
         isPopupVisible = popupView.visibility == View.VISIBLE // 팝업 상태 저장
     }
 
     override fun onPause() {
         super.onPause()
-        Log.i(" - MainActivity TODO LIST", "onPause")
+        Log.i(MAIN_LOG_TAG, "onPause")
         stopBleScan() // 스캔 중지
         isPopupVisible = popupView.visibility == View.VISIBLE // 팝업 상태 저장
     }
 
     override fun onResume() { //TODO : 앱 켜지면 자동으로 스캔해서 연결까지 동작
         super.onResume()
-        Log.i(" - MainActivity TODO LIST", "onResume")
+        Log.i(MAIN_LOG_TAG, "onResume")
 //        if (isPopupVisible) { // 팝업 상태 복구
 //            popupView.visibility = View.VISIBLE
 //            popupContainer.visibility = View.VISIBLE
@@ -123,16 +121,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startBleScan() {
-        Log.i(" - MainActivity", "popupContainer : ${popupContainer} ")
-        Log.i(" - MainActivity", "bluetoothAdapter : ${bluetoothAdapter}")
-        Log.i(" - MainActivity", "bluetoothAdapter.bluetoothLeScanner : ${bluetoothAdapter?.bluetoothLeScanner}")
+        Log.i(MAIN_LOG_TAG, "popupContainer : ${popupContainer} ")
+        Log.i(MAIN_LOG_TAG, "bluetoothAdapter : ${bluetoothAdapter}")
+        Log.i(MAIN_LOG_TAG, "bluetoothAdapter.bluetoothLeScanner : ${bluetoothAdapter?.bluetoothLeScanner}")
         bluetoothAdapter?.bluetoothLeScanner?.startScan(scanCallback)
         btnScanStart.visibility = View.GONE
         popupView.visibility = View.VISIBLE
         popupContainer.visibility = View.VISIBLE
 
         // 10초 후 스캔 중지
-        Log.i(" - MainActivity", "스캔 타임아웃 제한시간 : ${SCAN_PERIOD/1000}초 ")
+        Log.i(MAIN_LOG_TAG, "스캔 타임아웃 제한시간 : ${SCAN_PERIOD/1000}초 ")
 
         popupContainer.postDelayed({
             stopBleScan()
@@ -147,9 +145,9 @@ class MainActivity : AppCompatActivity() {
         bluetoothAdapter?.bluetoothLeScanner?.apply {
             try {
                 bluetoothAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
-                Log.e(" - MainActivity", "블루투스 스캔 정지 ")
+                Log.e(MAIN_LOG_TAG, "블루투스 스캔 정지 ")
             } catch (e: Exception) {
-                Log.e("MainActivity", "Failed to stop BLE scan: ${e.message}")
+                Log.e(MAIN_LOG_TAG, "Failed to stop BLE scan: ${e.message}")
             }
         }
         // apply 를 안쓰는 경우
@@ -176,12 +174,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onScanFailed(errorCode: Int) {
-            Log.e(" - MainActivity", "onScanFailed called with errorCode: $errorCode")
+            Log.e(MAIN_LOG_TAG, "onScanFailed called with errorCode: $errorCode")
             when (errorCode) {
-                ScanCallback.SCAN_FAILED_ALREADY_STARTED -> Log.e("MainActivity", "Scan already started")
-                ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> Log.e("MainActivity", "App registration failed")
-                ScanCallback.SCAN_FAILED_INTERNAL_ERROR -> Log.e("MainActivity", "Internal error")
-                ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED -> Log.e("MainActivity", "Feature unsupported")
+                ScanCallback.SCAN_FAILED_ALREADY_STARTED -> Log.e(MAIN_LOG_TAG, "Scan already started")
+                ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> Log.e(MAIN_LOG_TAG, "App registration failed")
+                ScanCallback.SCAN_FAILED_INTERNAL_ERROR -> Log.e(MAIN_LOG_TAG, "Internal error")
+                ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED -> Log.e(MAIN_LOG_TAG, "Feature unsupported")
             }
             Toast.makeText(this@MainActivity, "Scan failed: $errorCode", Toast.LENGTH_SHORT).show()
         }
