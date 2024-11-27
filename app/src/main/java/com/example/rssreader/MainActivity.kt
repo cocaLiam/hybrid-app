@@ -97,6 +97,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.i(MAIN_LOG_TAG, "onDestroy")
+        Toast.makeText(this, "onDestroy", Toast.LENGTH_SHORT).show()
         stopBleScan() // 스캔 중지
         isPopupVisible = popupView.visibility == View.VISIBLE // 팝업 상태 저장
     }
@@ -104,6 +105,7 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         Log.i(MAIN_LOG_TAG, "onPause")
+        Toast.makeText(this, "onPause", Toast.LENGTH_SHORT).show()
         stopBleScan() // 스캔 중지
         isPopupVisible = popupView.visibility == View.VISIBLE // 팝업 상태 저장
     }
@@ -111,6 +113,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() { //TODO : 앱 켜지면 자동으로 스캔해서 연결까지 동작
         super.onResume()
         Log.i(MAIN_LOG_TAG, "onResume")
+        Toast.makeText(this, "onResume", Toast.LENGTH_SHORT).show()
 //        if (isPopupVisible) { // 팝업 상태 복구
 //            popupView.visibility = View.VISIBLE
 //            popupContainer.visibility = View.VISIBLE
