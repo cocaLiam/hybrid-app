@@ -2,13 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+
+
     <!-- 이전 기기에서 레거시 Bluetooth 권한 요청 -->
-<!--    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />-->
-<!--    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />-->
+    <!--    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />-->
+    <!--    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />-->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
-<!--    Android 10(API 레벨 29) 또는 Android 11 인 경우, 백그라운드에서 Bluetooth 을 하려면 해당 위치 권한이 필요함.-->
+    <!--    Android 10(API 레벨 29) 또는 Android 11 인 경우, 백그라운드에서 Bluetooth 을 하려면 해당 위치 권한이 필요함.-->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <!-- Central 역할 ( Server )
@@ -17,9 +19,9 @@
     <a href="#assert-never-for-location">앱이 물리적 위치를 유도하지 않는다고 강하게 주장할 수 있습니다</a>. -->
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
 
-<!--    &lt;!&ndash; BLE Peripheral 역할 ( Client )-->
-<!--    앱이 Bluetooth 기기에서 검색 가능하도록 만드는 경우에만 필요합니다. &ndash;&gt;-->
-<!--    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />-->
+    <!--    &lt;!&ndash; BLE Peripheral 역할 ( Client )-->
+    <!--    앱이 Bluetooth 기기에서 검색 가능하도록 만드는 경우에만 필요합니다. &ndash;&gt;-->
+    <!--    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />-->
 
     <!-- BLE Central 및 Peripheral ( 이미 페어링된 기기와 통신 )
     앱이 이미 페어링된 Bluetooth 기기와 통신하는 경우에만 필요합니다. -->
@@ -30,11 +32,13 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-<!--    &lt;!&ndash;    앱에 블루투스 클래식이 필요하다고 표시하는 방법&ndash;&gt;-->
-<!--    <uses-feature android:name="android.hardware.bluetooth" android:required="true"/>-->
+    <!--    &lt;!&ndash;    앱에 블루투스 클래식이 필요하다고 표시하는 방법&ndash;&gt;-->
+    <!--    <uses-feature android:name="android.hardware.bluetooth" android:required="true"/>-->
 
-<!--    앱에 저전력 블루투스를 사용하는 경우-->
+    <!--    앱에 저전력 블루투스를 사용하는 경우-->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+
+
 
     <application
         android:allowBackup="true"
@@ -44,13 +48,11 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.RSSReader"
+        android:theme="@style/Theme.SimpleBleApp"
         tools:targetApi="31">
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.RSSReader">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

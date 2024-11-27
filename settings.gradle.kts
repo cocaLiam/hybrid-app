@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "BLE Tutorial App"
+rootProject.name = "simpleBleApp"
 include(":app")
  

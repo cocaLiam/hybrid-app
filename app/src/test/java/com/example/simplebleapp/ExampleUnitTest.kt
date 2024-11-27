@@ -1,4 +1,4 @@
-package com.example.rssreader
+package com.example.simplebleapp
 
 import org.junit.Test
 

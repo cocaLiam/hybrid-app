@@ -1,4 +1,4 @@
-package com.example.rssreader.bleModules
+package com.example.simplebleapp.bleModules
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
@@ -9,7 +9,7 @@ import android.widget.RadioButton
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.rssreader.R
+import com.example.simplebleapp.R
 
 class ScanListAdapter() :
     RecyclerView.Adapter<ScanListAdapter.ScanViewHolder>() {
