@@ -16,9 +16,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 
 //  블루투스 권한 요청에 필요 한 import
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothManager
-import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.widget.Toast
@@ -32,9 +29,7 @@ import com.example.rssreader.bleModules.BleController
 class MainActivity : ComponentActivity() {
     // 1. ActivityResultLauncher를 클래스의 멤버 변수로 선언합니다.
     private lateinit var enableBluetoothLauncher: ActivityResultLauncher<Intent>
-    private lateinit var bluetoothManager   : BluetoothManager
-    private lateinit var bluetoothAdapter   : BluetoothAdapter
-    private lateinit var bluetoothLeScanner : BluetoothLeScanner
+    private val bleController = BleController(this) // MainActivity는 Context를 상속받음
     private val handler = Handler()
     private val leDeviceListAdapter = LeDeviceListAdapter()
 
@@ -46,7 +41,6 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.activity_main)
 
         // 1. BluetoothManager 및 BluetoothAdapter 초기화
-        val bleController = BleController(this) // MainActivity는 Context를 상속받음
         bleController.setBleModules()
 
         val recyclerView: RecyclerView = findViewById(R.id.recyclerView)
