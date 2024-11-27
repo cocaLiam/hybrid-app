@@ -38,10 +38,8 @@ class MainActivity : AppCompatActivity() {
     // 1. ActivityResultLauncher를 클래스의 멤버 변수로 선언합니다.
     private lateinit var enableBluetoothLauncher: ActivityResultLauncher<Intent>
     private val bleController = BleController(this) // MainActivity는 Context를 상속받음
-    private val handler = Handler()
-//    private val leDeviceListAdapter = LeDeviceListAdapter()
+//    private val handler = Handler()
 
-    private val bluetoothAdapter: BluetoothAdapter? by lazy { BluetoothAdapter.getDefaultAdapter() }
     private var scanListAdapter: ScanListAdapter = ScanListAdapter()
     private var isPopupVisible = false
 
@@ -101,7 +99,7 @@ class MainActivity : AppCompatActivity() {
                 // 모든 권한이 허용된 경우 콜백 실행
                 onPermissionGranted()
             } else {
-                Log.i(MAIN_LOG_TAG, "권한 요청 중...")
+                Log.i(MAIN_LOG_TAG, "권한 요청 중... ${permissionOk}")
             }
         }
 
@@ -150,7 +148,6 @@ class MainActivity : AppCompatActivity() {
         rootLayout.addView(popupView)
 
         // Scan Start 버튼 클릭 리스너
-        // Scan Start 버튼 클릭 리스너 수정
         btnScanStart.setOnClickListener {
             permissionRequest {
                 // 권한이 허용된 경우에만 BLE 스캔 시작
@@ -158,39 +155,112 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-//        btnScanStart.setOnClickListener {
-//            if (permissionRequest()) {
-//                Log.i(MAIN_LOG_TAG, " SCANING --")
-//                startBleScan()
-//            } else {
-//                Log.i(MAIN_LOG_TAG, " Pemission Requseting --")
-//                permissionRequest()
-//            }
-//        }
-
         // Close 버튼 클릭 리스너
         btnClose.setOnClickListener {
-            stopBleScan()
+            stopBleScanAndClearScanList()
         }
+
+//        // Connect 버튼 클릭 리스너
+//        btnConnect.setOnClickListener {
+//            val selectedDevice = scanListAdapter.getSelectedDevice()
+//            if (selectedDevice != null) {
+//                Toast.makeText(this, "Selected: ${selectedDevice?.name}", Toast.LENGTH_SHORT).show()
+//                // TODO : BLE GATT 연결 로직은 이후 구현
+//                // 권한이 허용된 경우 BLE 장치 연결
+//                permissionRequest {
+//                    // 권한이 허용된 경우에만 BLE 스캔 시작
+//                    bleController.connectToDevice(selectedDevice) { isConnected ->
+//                        if (isConnected) {
+//                            Log.i(MAIN_LOG_TAG, "BLE 장치에 성공적으로 연결되었습니다.")
+//                        } else {
+//                            Log.d(MAIN_LOG_TAG, "BLE 장치 연결이 해제되었습니다.")
+//                        }
+//                    }
+//                }
+//            } else {
+//                Toast.makeText(this, "No device selected", Toast.LENGTH_SHORT).show()
+//            }
+//        }
 
         // Connect 버튼 클릭 리스너
         btnConnect.setOnClickListener {
             val selectedDevice = scanListAdapter.getSelectedDevice()
-            if (selectedDevice != null) {
+            if (selectedDevice != null) {  // unknown Device 의 경우
                 Toast.makeText(this, "Selected: ${selectedDevice?.name}", Toast.LENGTH_SHORT).show()
-                // TODO : BLE GATT 연결 로직은 이후 구현
+                // 권한이 허용된 경우 BLE 장치 연결
+                if (ActivityCompat.checkSelfPermission(  // 블루투스 커넥트 권한 검사
+                        this,
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {  // 블루투스 권한이 이미 있는 경우
+                    bleController.connectToDevice(selectedDevice) { isConnected ->
+                        if (isConnected) {
+                            Log.i(MAIN_LOG_TAG, "BLE 장치에 성공적으로 연결되었습니다.")
+                        } else {
+                            Log.i(MAIN_LOG_TAG, "BLE 장치 연결이 해제되었습니다.")
+                        }
+                    }
+                } else {  // 블루투스 권한이 없는 경우 권한 요청 후 다시 Connect
+                    permissionRequest {
+                        bleController.connectToDevice(selectedDevice) { isConnected ->
+                            if (isConnected) {
+                                Log.i(MAIN_LOG_TAG, "BLE 장치에 성공적으로 연결되었습니다.")
+                            } else {
+                                Log.i(MAIN_LOG_TAG, "BLE 장치 연결이 해제되었습니다.")
+                            }
+                        }
+                    }
+                }
             } else {
                 Toast.makeText(this, "No device selected", Toast.LENGTH_SHORT).show()
             }
         }
-
 // UI 초기화 완료 ------------------------------------------------------------------------------------
     }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            when (requestCode) {
+                101 -> { // BLE 스캔 권한 요청 결과
+                    Log.i(MAIN_LOG_TAG, "블루투스 스캔 권한이 허용되었습니다.")
+                }
+                102 -> { // 위치 권한 요청 결과
+                    Log.i(MAIN_LOG_TAG, "위치 권한이 허용되었습니다.")
+                }
+                103 -> { // BLE 연결 권한 요청 결과
+                    Log.i(MAIN_LOG_TAG, "블루투스 연결 권한이 허용되었습니다.")
+                }
+            }
+        } else {
+            // 권한이 거부된 경우
+            when (requestCode) {
+                101 -> {
+                    Log.e(MAIN_LOG_TAG, "블루투스 스캔 권한이 거부되었습니다.")
+                    Toast.makeText(this, "블루투스 스캔 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+                }
+                102 -> {
+                    Log.e(MAIN_LOG_TAG, "위치 권한이 거부되었습니다.")
+                    Toast.makeText(this, "위치 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+                }
+                103 -> {
+                    Log.e(MAIN_LOG_TAG, "블루투스 연결 권한이 거부되었습니다.")
+                    Toast.makeText(this, "블루투스 연결 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         Log.i(MAIN_LOG_TAG, "onDestroy")
 //        Toast.makeText(this, "onDestroy", Toast.LENGTH_SHORT).show()
-        stopBleScan()
+        stopBleScanAndClearScanList()
         isPopupVisible = popupView.visibility == View.VISIBLE // 팝업 상태 저장
     }
 
@@ -198,7 +268,7 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         Log.i(MAIN_LOG_TAG, "onPause")
 //        Toast.makeText(this, "onPause", Toast.LENGTH_SHORT).show()
-        stopBleScan()
+        stopBleScanAndClearScanList()
         isPopupVisible = popupView.visibility == View.VISIBLE // 팝업 상태 저장
     }
 
@@ -226,13 +296,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun stopBleScan() {
+    private fun stopBleScanAndClearScanList() {
         try {
             bleController.stopBleScan(scanCallback)
             Log.i(MAIN_LOG_TAG, "블루투스 스캔 정지 ")
             btnScanStart.visibility = View.VISIBLE // Scan Start 버튼 활성화
             popupView.visibility = View.GONE // 팝업 숨김
             popupContainer.visibility = View.GONE // 팝업 컨테이너 숨김
+            scanListAdapter.clearDevices()
         } catch (e: Exception) {
             Log.e(MAIN_LOG_TAG, "Failed to stop BLE scan: ${e.message}")
         }
