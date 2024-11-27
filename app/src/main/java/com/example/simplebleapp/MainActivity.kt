@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 
 // UI Pack
 import android.view.LayoutInflater
@@ -18,14 +17,13 @@ import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 
 // BLE Pack
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Intent
-import android.os.Handler
 
 // Util Pack
 import android.util.Log
+import android.widget.EditText
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -54,6 +52,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var popupContainer: LinearLayout
     private lateinit var recyclerScanList: RecyclerView
     private lateinit var popupView: View
+    // Data Send, receive Button 및 Text 입력창
+    private lateinit var etInputData: EditText
+    private lateinit var btnSendData: Button
+    private lateinit var btnReceiveData: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -141,6 +143,11 @@ class MainActivity : AppCompatActivity() {
         popupContainer = popupView.findViewById(R.id.popup_container)
         recyclerScanList = popupView.findViewById(R.id.recycler_scan_list)
 
+        // 데이터 입력창 및 버튼 초기화
+        etInputData = findViewById(R.id.et_input_data)
+        btnSendData = findViewById(R.id.btn_send_data)
+        btnReceiveData = findViewById(R.id.btn_receive_data)
+
         // RecyclerView 초기화
         scanListAdapter.setupRecyclerView(recyclerScanList, this@MainActivity)
 
@@ -153,6 +160,23 @@ class MainActivity : AppCompatActivity() {
                 // 권한이 허용된 경우에만 BLE 스캔 시작
                 startBleScan()
             }
+        }
+
+        // 데이터 전송 버튼 클릭 리스너
+        btnSendData.setOnClickListener {
+            val inputData = etInputData.text.toString() // EditText에서 입력된 데이터 가져오기
+            if (inputData.isNotEmpty()) {
+                val dataToSend = inputData.toByteArray() // 문자열을 ByteArray로 변환
+                bleController.writeData(dataToSend) // BLE로 데이터 전송
+                Toast.makeText(this, "Data Sent: $inputData", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Please enter data to send", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // 데이터 수신 버튼 클릭 리스너
+        btnReceiveData.setOnClickListener {
+            bleController.readData() // BLE 데이터 읽기 요청
         }
 
         // Close 버튼 클릭 리스너
@@ -186,7 +210,7 @@ class MainActivity : AppCompatActivity() {
         btnConnect.setOnClickListener {
             val selectedDevice = scanListAdapter.getSelectedDevice()
             if (selectedDevice != null) {  // unknown Device 의 경우
-                Toast.makeText(this, "Selected: ${selectedDevice?.name}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Selected: ${selectedDevice.name}", Toast.LENGTH_SHORT).show()
                 // 권한이 허용된 경우 BLE 장치 연결
                 if (ActivityCompat.checkSelfPermission(  // 블루투스 커넥트 권한 검사
                         this,
@@ -259,7 +283,8 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.i(MAIN_LOG_TAG, "onDestroy")
-//        Toast.makeText(this, "onDestroy", Toast.LENGTH_SHORT).show()
+        bleController.disconnect()
+        Toast.makeText(this, "onDestroy", Toast.LENGTH_SHORT).show()
         stopBleScanAndClearScanList()
         isPopupVisible = popupView.visibility == View.VISIBLE // 팝업 상태 저장
     }
