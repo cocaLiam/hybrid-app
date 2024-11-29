@@ -27,6 +27,7 @@ import android.widget.EditText
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.Observer
 
 // Custom Package
 import com.example.simplebleapp.bleModules.ScanListAdapter
@@ -41,8 +42,6 @@ class MainActivity : AppCompatActivity() {
     private var scanListAdapter: ScanListAdapter = ScanListAdapter()
     private var isPopupVisible = false
 
-    // Stops scanning after 10 seconds.
-    private val SCAN_PERIOD: Long = 10000
     private val MAIN_LOG_TAG = " - MainActivity "
 
     // View 변수 선언
@@ -54,8 +53,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var popupView: View
     // Data Send, receive Button 및 Text 입력창
     private lateinit var etInputData: EditText
+    private lateinit var etOutputData: EditText
     private lateinit var btnSendData: Button
-    private lateinit var btnReceiveData: Button
+    private lateinit var btnRequestReadData: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -144,9 +144,10 @@ class MainActivity : AppCompatActivity() {
         recyclerScanList = popupView.findViewById(R.id.recycler_scan_list)
 
         // 데이터 입력창 및 버튼 초기화
-        etInputData = findViewById(R.id.et_input_data)
         btnSendData = findViewById(R.id.btn_send_data)
-        btnReceiveData = findViewById(R.id.btn_receive_data)
+        etInputData = findViewById(R.id.et_input_data)
+        btnRequestReadData = findViewById(R.id.btn_request_read_data)
+        etOutputData = findViewById(R.id.et_output_data)
 
         // RecyclerView 초기화
         scanListAdapter.setupRecyclerView(recyclerScanList, this@MainActivity)
@@ -167,6 +168,7 @@ class MainActivity : AppCompatActivity() {
             val inputData = etInputData.text.toString() // EditText에서 입력된 데이터 가져오기
             if (inputData.isNotEmpty()) {
                 val dataToSend = inputData.toByteArray() // 문자열을 ByteArray로 변환
+//                val hexString = dataToSend.joinToString(" ") { "%02x".format(it) }
                 bleController.writeData(dataToSend) // BLE로 데이터 전송
                 Toast.makeText(this, "Data Sent: $inputData", Toast.LENGTH_SHORT).show()
             } else {
@@ -174,37 +176,23 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 데이터 수신 버튼 클릭 리스너
-        btnReceiveData.setOnClickListener {
-            bleController.readData() // BLE 데이터 읽기 요청
+        // ( 트리거 : APP )
+        // 기기에 Info Request 를 해서 받는 Read Data
+        btnRequestReadData.setOnClickListener {
+            bleController.requestReadData()
+//            etOutputData.setText(bleController.getReadData())
         }
+
+        // LiveData 관찰 설정
+        bleController.readData.observe(this, Observer { newData ->
+            // 데이터가 변경되면 UI 업데이트
+            etOutputData.setText(newData)
+        })
 
         // Close 버튼 클릭 리스너
         btnClose.setOnClickListener {
             stopBleScanAndClearScanList()
         }
-
-//        // Connect 버튼 클릭 리스너
-//        btnConnect.setOnClickListener {
-//            val selectedDevice = scanListAdapter.getSelectedDevice()
-//            if (selectedDevice != null) {
-//                Toast.makeText(this, "Selected: ${selectedDevice?.name}", Toast.LENGTH_SHORT).show()
-//                // TODO : BLE GATT 연결 로직은 이후 구현
-//                // 권한이 허용된 경우 BLE 장치 연결
-//                permissionRequest {
-//                    // 권한이 허용된 경우에만 BLE 스캔 시작
-//                    bleController.connectToDevice(selectedDevice) { isConnected ->
-//                        if (isConnected) {
-//                            Log.i(MAIN_LOG_TAG, "BLE 장치에 성공적으로 연결되었습니다.")
-//                        } else {
-//                            Log.d(MAIN_LOG_TAG, "BLE 장치 연결이 해제되었습니다.")
-//                        }
-//                    }
-//                }
-//            } else {
-//                Toast.makeText(this, "No device selected", Toast.LENGTH_SHORT).show()
-//            }
-//        }
 
         // Connect 버튼 클릭 리스너
         btnConnect.setOnClickListener {
@@ -217,24 +205,26 @@ class MainActivity : AppCompatActivity() {
                         Manifest.permission.BLUETOOTH_CONNECT
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {  // 블루투스 권한이 이미 있는 경우
-                    bleController.connectToDevice(selectedDevice) { isConnected ->
+                    bleController.connectToDevice(selectedDevice, { isConnected ->
                         if (isConnected) {
                             Log.i(MAIN_LOG_TAG, "BLE 장치에 성공적으로 연결되었습니다.")
                         } else {
                             Log.i(MAIN_LOG_TAG, "BLE 장치 연결이 해제되었습니다.")
                         }
-                    }
+                    })
                 } else {  // 블루투스 권한이 없는 경우 권한 요청 후 다시 Connect
                     permissionRequest {
-                        bleController.connectToDevice(selectedDevice) { isConnected ->
+                        bleController.connectToDevice(selectedDevice, { isConnected ->
                             if (isConnected) {
                                 Log.i(MAIN_LOG_TAG, "BLE 장치에 성공적으로 연결되었습니다.")
                             } else {
                                 Log.i(MAIN_LOG_TAG, "BLE 장치 연결이 해제되었습니다.")
                             }
-                        }
+                        })
                     }
                 }
+                // Connect 후 팝업창 종료 + Scan 종료
+                stopBleScanAndClearScanList()
             } else {
                 Toast.makeText(this, "No device selected", Toast.LENGTH_SHORT).show()
             }

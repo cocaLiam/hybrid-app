@@ -28,6 +28,8 @@ import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import androidx.annotation.RequiresPermission
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 
 
 // Util Pack
@@ -45,14 +47,26 @@ class BleController(private val applicationContext: Context) {
     // GATT 특성
     private var writeCharacteristic: BluetoothGattCharacteristic? = null
     private var readCharacteristic: BluetoothGattCharacteristic? = null
+    private var receivedString:String = ""
 
-    // UUID는 GATT 서비스와 특성을 식별하는 데 사용됩니다.
-//    private val SERVICE_UUID = UUID.fromString("0000180d-0000-1000-8000-00805f9b34fb") // 예: Heart Rate Service
-//    private val WRITE_CHARACTERISTIC_UUID = UUID.fromString("00002a39-0000-1000-8000-00805f9b34fb") // 예: Write Characteristic
-//    private val READ_CHARACTERISTIC_UUID = UUID.fromString("00002a37-0000-1000-8000-00805f9b34fb") // 예: Read Characteristic
-    private val SERVICE_UUID = UUID.fromString("49535343-fe7d-4ae5-8fa9-9fafd205e455") //
-    private val WRITE_CHARACTERISTIC_UUID = UUID.fromString("49535343-1e4d-4bd9-ba61-23c647249616") //
-    private val READ_CHARACTERISTIC_UUID = UUID.fromString("00002a37-0000-1000-8000-00805f9b34fb") //
+    // 수신 데이터를 LiveData로 관리
+    private val _readData = MutableLiveData<String>() // 내부에서만 수정 가능
+    val readData: LiveData<String> get() = _readData // 외부에서는 읽기만 가능
+
+//    // UUID는 GATT 서비스와 특성을 식별하는 데 사용됩니다.
+//    private val SERVICE_UUID = UUID.fromString("49535343-fe7d-4ae5-8fa9-9fafd205e455") //
+//    private val WRITE_CHARACTERISTIC_UUID = UUID.fromString("49535343-8841-43f4-a8d4-ecbe34729bb3") //
+//    private val READ_CHARACTERISTIC_UUID = UUID.fromString("49535343-1e4d-4bd9-ba61-23c647249616") //
+
+//    // Microchip Keyboard
+//    private val SERVICE_UUID = UUID.fromString("00001812-0000-1000-8000-00805f9b34fb") //
+//    private val WRITE_CHARACTERISTIC_UUID = UUID.fromString("00002a4e-0000-1000-8000-00805f9b34fb") //
+//    private val READ_CHARACTERISTIC_UUID = UUID.fromString("00002a4d-0000-1000-8000-00805f9b34fb") //
+
+    // pic32cx-bz 읽기 특성
+    private val SERVICE_UUID =              UUID.fromString("4d434850-5255-42d0-aef8-881facf4ceea")
+    private val WRITE_CHARACTERISTIC_UUID = UUID.fromString("4d434850-5255-42d0-aef8-881fccf4ceea")
+    private val READ_CHARACTERISTIC_UUID =  UUID.fromString("4d434850-5255-42d0-aef8-881fbcf4ceea")
 
     // ActivityResultLauncher를 클래스의 멤버 변수로 선언
     private lateinit var enableBluetoothLauncher: ActivityResultLauncher<Intent>
@@ -207,69 +221,29 @@ class BleController(private val applicationContext: Context) {
         }
     }
 
-
-
-//    /**
-//     * BLE 장치 연결
-//     */
-//    @RequiresPermission(value = Manifest.permission.BLUETOOTH_CONNECT)
-//    fun connectToDevice(device: BluetoothDevice, onConnectionStateChange: (Boolean) -> Unit) {
-//        bluetoothGatt = device.connectGatt(applicationContext, false, object : BluetoothGattCallback() {
-//            override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-//                super.onConnectionStateChange(gatt, status, newState)
-//                if (newState == BluetoothProfile.STATE_CONNECTED) {
-//                    Log.d(BLECONT_LOG_TAG, "GATT 서버에 연결되었습니다.")
-//                    onConnectionStateChange(true)
-//
-//                    // Android 12(API 31) 이상에서만 BLUETOOTH_CONNECT 권한 확인
-//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//                        if (ActivityCompat.checkSelfPermission(
-//                                applicationContext,
-//                                Manifest.permission.BLUETOOTH_CONNECT
-//                            ) != PackageManager.PERMISSION_GRANTED
-//                        ) {
-//                            Log.e(BLECONT_LOG_TAG, "BLUETOOTH_CONNECT 권한이 없습니다. discoverServices()를 호출할 수 없습니다.")
-//                            Toast.makeText(applicationContext, "BLUETOOTH_CONNECT 권한이 없습니다.", Toast.LENGTH_SHORT).show()
-//                            // 권한이 없으면 discoverServices()를 호출하지 않고 종료
-//                            return
-//                        }
-//                    }
-//
-//                    // GATT 서비스 검색 시작
-//                    Log.i(BLECONT_LOG_TAG,"gatt.discoverServices 시작")
-//                    gatt.discoverServices()
-//                    Log.i(BLECONT_LOG_TAG,"gatt.discoverServices 시작")
-//
-//                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-//                    Log.d(BLECONT_LOG_TAG, "Disconnected from GATT server.")
-//                    onConnectionStateChange(false)
-//                }
-//            }
-//
-//            override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-//                super.onServicesDiscovered(gatt, status)
-//                if (status == BluetoothGatt.GATT_SUCCESS) {
-//                    Log.d(BLECONT_LOG_TAG, "Services discovered: ${gatt.services}")
-//                } else {
-//                    Log.w(BLECONT_LOG_TAG, "onServicesDiscovered received: $status")
-//                }
-//            }
-//        })
-//    }
-
     /**
      * BLE 장치 연결
      */
     @RequiresPermission(value = Manifest.permission.BLUETOOTH_CONNECT)
     fun connectToDevice(device: BluetoothDevice, onConnectionStateChange: (Boolean) -> Unit) {
+        // 장치의 본딩 상태 확인 (본딩: BLE 장치와의 신뢰 관계를 설정하는 과정)
+        when (device.bondState){
+            BluetoothDevice.BOND_BONDED -> Log.i(BLECONT_LOG_TAG, "해당 장치가 본딩되어 있습니다.")
+            BluetoothDevice.BOND_BONDING -> Log.i(BLECONT_LOG_TAG, "해당 장치가 본딩 중입니다.")
+            BluetoothDevice.BOND_NONE -> Log.i(BLECONT_LOG_TAG, "해당 장치가 본딩되지 않았습니다.")
+        }
+        // GATT 서버에 연결 시도
         bluetoothGatt = device.connectGatt(applicationContext, false, object : BluetoothGattCallback() {
+
+            // GATT 연결 상태가 변경되었을 때 호출되는 콜백
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                 super.onConnectionStateChange(gatt, status, newState)
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
+                    // GATT 서버에 연결 성공
                     Log.d(BLECONT_LOG_TAG, "GATT 서버에 연결되었습니다.")
                     onConnectionStateChange(true)
 
-                    // 권한 확인 및 GATT 서비스 검색
+                    // GATT 서비스 검색 (권한 확인 후 실행)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         if (ContextCompat.checkSelfPermission(
                                 applicationContext,
@@ -292,6 +266,7 @@ class BleController(private val applicationContext: Context) {
                         }
                     }
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                    // GATT 서버 연결 해제
                     Log.d(BLECONT_LOG_TAG, "GATT 서버 연결이 해제되었습니다.")
                     onConnectionStateChange(false)
                 }
@@ -300,6 +275,7 @@ class BleController(private val applicationContext: Context) {
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
                 super.onServicesDiscovered(gatt, status)
                 if (status == BluetoothGatt.GATT_SUCCESS) {
+                    // GATT 서비스 검색 성공
                     Log.d(BLECONT_LOG_TAG, "GATT 서비스 검색 성공")
 
                     // 검색된 모든 서비스와 특성을 로그로 출력
@@ -321,6 +297,7 @@ class BleController(private val applicationContext: Context) {
                             Log.d(BLECONT_LOG_TAG, "쓰기 특성 발견: $WRITE_CHARACTERISTIC_UUID")
                         } else {
                             Log.e(BLECONT_LOG_TAG, "쓰기 특성을 찾을 수 없습니다.")
+                            useToastOnSubThread("쓰기 특성을 찾을 수 없습니다.")
                         }
 
                         // 읽기 특성 초기화
@@ -340,9 +317,11 @@ class BleController(private val applicationContext: Context) {
                                         Log.d(BLECONT_LOG_TAG, "읽기 특성에 대한 알림 활성화")
                                     } catch (e: SecurityException) {
                                         Log.e(BLECONT_LOG_TAG, "BLUETOOTH_CONNECT 권한이 없어 알림을 활성화할 수 없습니다.")
+                                        useToastOnSubThread("BLUETOOTH_CONNECT 권한이 없어 알림을 활성화할 수 없습니다.")
                                     }
                                 } else {
                                     Log.e(BLECONT_LOG_TAG, "BLUETOOTH_CONNECT 권한이 없습니다.")
+                                    useToastOnSubThread("BLUETOOTH_CONNECT 권한이 없습니다.")
                                 }
                             } else {
                                 try {
@@ -350,40 +329,93 @@ class BleController(private val applicationContext: Context) {
                                     Log.d(BLECONT_LOG_TAG, "읽기 특성에 대한 알림 활성화")
                                 } catch (e: SecurityException) {
                                     Log.e(BLECONT_LOG_TAG, "BLUETOOTH_CONNECT 권한이 없어 알림을 활성화할 수 없습니다.")
+                                    useToastOnSubThread("BLUETOOTH_CONNECT 권한이 없어 알림을 활성화할 수 없습니다.")
                                 }
                             }
                         } else {
                             Log.e(BLECONT_LOG_TAG, "읽기 특성을 찾을 수 없습니다.")
+                            useToastOnSubThread("읽기 특성을 찾을 수 없습니다.")
                         }
                     } else {
                         Log.e(BLECONT_LOG_TAG, "특정 서비스를 찾을 수 없습니다: $SERVICE_UUID")
+                        useToastOnSubThread("특정 서비스를 찾을 수 없습니다: $SERVICE_UUID")
                     }
                 } else {
+                    // GATT 서비스 검색 실패
                     Log.e(BLECONT_LOG_TAG, "GATT 서비스 검색 실패: $status")
+                    useToastOnSubThread("GATT 서비스 검색 실패: $status")
                 }
             }
 
-
+            // ( 트리거 : IoT기기 ) 기기가 Data 전송 > App 이 읽음
+            // 읽기 특성에 대한 알림(Notification)이 활성화된 경우, 데이터가 수신될 때 호출되는 콜백
             override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
                 super.onCharacteristicChanged(gatt, characteristic)
+                Log.i(BLECONT_LOG_TAG, "수신된 데이터: $characteristic")
                 if (characteristic.uuid == READ_CHARACTERISTIC_UUID) {
                     val receivedData = characteristic.value // 수신된 데이터
-                    val receivedString = String(receivedData) // ByteArray를 문자열로 변환
-                    Log.i(BLECONT_LOG_TAG, "수신된 데이터: $receivedString")
+                    receivedString = String(receivedData) // ByteArray를 문자열로 변환
+                    updateReadData(receivedString)
 
                     // Toast로 수신된 데이터 표시
-                    Toast.makeText(applicationContext, "Received Data: $receivedString", Toast.LENGTH_SHORT).show()
+                    useToastOnSubThread("Received Data: $receivedString")
                 }
             }
 
+            // ( 트리거 : APP ) App 이 Read 요청 > 기기가 Data 전송 > App 이 읽음
+            // 기기에 Info Request 를 해서 받는 Read Data
+            override fun onCharacteristicRead(
+                gatt: BluetoothGatt,
+                characteristic: BluetoothGattCharacteristic,
+                status: Int
+            ) {
+                super.onCharacteristicRead(gatt, characteristic, status)
+                Log.i(BLECONT_LOG_TAG, "수신된 데이터: $characteristic status : ${status}")
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    // 읽은 데이터 가져오기
+                    val data = characteristic.value
+
+//                    // ByteArray를 문자열로 변환
+//                    receivedString = String(data) // 기본적으로 UTF-8로 변환
+//                    Log.i(BLECONT_LOG_TAG, "수신된 데이터 (String): $receivedString")
+
+                    // UTF-8로 변환
+                    val utf8String = String(data, Charsets.UTF_8)
+                    Log.i(BLECONT_LOG_TAG, "수신된 데이터 (UTF-8): $utf8String")
+
+//                    // EUC-KR로 변환
+//                    val eucKrString = String(data, Charsets.EUC_KR)
+//                    Log.i(BLECONT_LOG_TAG, "수신된 데이터 (EUC-KR): $eucKrString")
+
+                    // ASCII로 변환
+                    val asciiString = String(data, Charsets.US_ASCII)
+                    Log.i(BLECONT_LOG_TAG, "수신된 데이터 (ASCII): $asciiString")
+
+                    // Hexadecimal로 출력
+                    val hexString = data.joinToString(" ") { String.format("%02X", it) }
+                    Log.i(BLECONT_LOG_TAG, "수신된 데이터 (Hex): $hexString")
+
+                    receivedString = hexString
+                    updateReadData(receivedString)
+                    // UI 스레드에서 Toast 표시
+                    useToastOnSubThread("읽은 데이터: $receivedString")
+                } else {
+                    Log.e(BLECONT_LOG_TAG, "데이터 읽기 실패: $status")
+                }
+            }
+
+            // 데이터를 썼을 때 호출되는 콜백
             override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
                 super.onCharacteristicWrite(gatt, characteristic, status)
                 if (status == BluetoothGatt.GATT_SUCCESS) {
+                    // 데이터 전송 성공
                     Log.i(BLECONT_LOG_TAG, "데이터 전송 성공: ${String(characteristic.value)}")
                 } else {
+                    // 데이터 전송 실패
                     Log.e(BLECONT_LOG_TAG, "데이터 전송 실패: $status")
                 }
             }
+
         })
     }
 
@@ -393,6 +425,7 @@ class BleController(private val applicationContext: Context) {
     fun writeData(data: ByteArray) {
         if (writeCharacteristic != null) {
             writeCharacteristic?.value = data
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 if (ContextCompat.checkSelfPermission(
                         applicationContext,
@@ -420,9 +453,10 @@ class BleController(private val applicationContext: Context) {
     }
 
     /**
-     * 데이터 읽기
+     * App 이 Read 요청 > 기기가 Data 전송 > App 이 읽음
+     * --> onCharacteristicRead 오버라이드 함수 호출
      */
-    fun readData() {
+    fun requestReadData() {
         if (readCharacteristic != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 if (ContextCompat.checkSelfPermission(
@@ -431,7 +465,8 @@ class BleController(private val applicationContext: Context) {
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
                     try {
-                        bluetoothGatt?.readCharacteristic(readCharacteristic)
+                        bluetoothGatt?.readCharacteristic(readCharacteristic) // 읽기 요청
+                        Log.i(BLECONT_LOG_TAG, "읽기 요청을 하였습니다.")
                     } catch (e: SecurityException) {
                         Log.e(BLECONT_LOG_TAG, "BLUETOOTH_CONNECT 권한이 없어 데이터를 읽을 수 없습니다.")
                     }
@@ -440,7 +475,8 @@ class BleController(private val applicationContext: Context) {
                 }
             } else {
                 try {
-                    bluetoothGatt?.readCharacteristic(readCharacteristic)
+                    bluetoothGatt?.readCharacteristic(readCharacteristic) // 읽기 요청
+                    Log.i(BLECONT_LOG_TAG, "읽기 요청을 하였습니다.")
                 } catch (e: SecurityException) {
                     Log.e(BLECONT_LOG_TAG, "BLUETOOTH_CONNECT 권한이 없어 데이터를 읽을 수 없습니다.")
                 }
@@ -449,6 +485,14 @@ class BleController(private val applicationContext: Context) {
             Log.e(BLECONT_LOG_TAG, "읽기 특성이 초기화되지 않았습니다.")
         }
     }
+
+    /**
+    * 읽은 데이터 반환
+     */
+    fun getReadData(): String{
+        return receivedString
+    }
+
 
     /**
      * BLE 연결 해제
@@ -475,4 +519,21 @@ class BleController(private val applicationContext: Context) {
             permissionStatus["블루투스 권한"] = false
         }
     }
+
+    /**
+     * 유틸성 함수들
+     */
+    fun useToastOnSubThread(msg:String){
+        // Toast 같은 UI 제어 함수들은 꼭 UI스레드(Main쓰레드) 에서 호출되야 발동한다.
+        //Handler(applicationContext.mainLooper).post { ... } << applicationContext.mainLooper(UI쓰레드) 를 가져옴
+        Handler(applicationContext.mainLooper).post {
+            Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 데이터를 업데이트하는 메서드
+    fun updateReadData(data: String) {
+        _readData.postValue(data) // LiveData에 새로운 데이터 설정
+    }
+
 }
