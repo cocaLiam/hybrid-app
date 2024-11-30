@@ -6,10 +6,11 @@ import androidx.activity.enableEdgeToEdge
 
 import android.webkit.WebView
 import android.webkit.WebViewClient
-
+import com.example.rssreader.webviewmodule.HybridAppBridge
 
 class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
+    private lateinit var hybridAppBridge: HybridAppBridge
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,18 +18,25 @@ class MainActivity : ComponentActivity() {
 
         setContentView(R.layout.activity_main)
 
-        webView = findViewById(R.id.webview)
+        // WebView 초기화
+        webView = findViewById(R.id.webView) // activity_main.xml에 정의된 WebView ID
+        hybridAppBridge = HybridAppBridge(webView)
 
-        webView.settings.javaScriptEnabled = true // JavaScript 사용을 허용
-        webView.settings.domStorageEnabled = true // DOM storage 활성화 // 로컬 스토리지 사용( Token 때문에 필요함 )
-        webView.settings.allowFileAccess = true
-        webView.settings.allowContentAccess = true
-        webView.settings.allowFileAccessFromFileURLs = true
-        webView.settings.allowUniversalAccessFromFileURLs = true
+        // WebView 설정
+        hybridAppBridge.initializeWebView(this)
+
+        // 특정 URL 로드
+        val url = "https://app.cocabot.com" // 원하는 URL로 변경
+        hybridAppBridge.loadUrl(url)
+
+        // Web으로 데이터 전달 예제
+        sendDataToWebExample()
+
 
         webView.webViewClient = WebViewClient() // 링크 클릭 시 새 창이 아닌 WebView 내에서 열리도록 설정
 
         webView.loadUrl("https://app.cocabot.com/") // 원하는 URL로 변경
+
     }
 
     override fun onStart() {
@@ -53,11 +61,23 @@ class MainActivity : ComponentActivity() {
 //        }
 //    }
 
+    /**
+     * Web으로 데이터 전달 예제
+     */
+    private fun sendDataToWebExample() {
+        val functionName = "receiveDataFromApp" // JavaScript 함수 이름
+        val data = "{\"key\":\"value\"}" // JSON 형식의 데이터
+        hybridAppBridge.sendDataToWeb(functionName, data)
+    }
+
+    /**
+     * 뒤로가기 버튼 처리
+     */
     override fun onBackPressed() {
         if (webView.canGoBack()) {
-            webView.goBack() // WebView에서 뒤로 가기
+            webView.goBack()
         } else {
-            super.onBackPressed() // 기본 뒤로 가기
+            super.onBackPressed()
         }
     }
 }

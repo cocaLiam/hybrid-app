@@ -15,7 +15,7 @@
 
     <!-- WebView의 높이를 조정하여 전체를 차지하지 않도록 설정 -->
     <WebView
-        android:id="@+id/webview"
+        android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
