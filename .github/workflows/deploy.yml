@@ -1,46 +1,58 @@
 name: Deploy to S3
 
+# 워크플로우 트리거 조건
 on:
   push:
     branches:
-      - FrontEndProd
-    paths:
-      - '**'
+      - FrontEndProd # FrontEndProd 브랜치에서만 실행
     tags:
-      - 'Release_v*'
+      - 'Release_v*' # 태그 이름이 Release_vXX 형식일 때만 실행
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # GitHub Actions가 실행될 환경 설정
 
     steps:
+      # 1. 코드 체크아웃
       - name: Checkout code
         uses: actions/checkout@v3
+        # GitHub 레포지토리의 코드를 가져옵니다.
 
+      # 2. Node.js 환경 설정
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '16' # Node.js 버전 설정
 
+      # 3. 의존성 설치
       - name: Install dependencies
         run: npm install
+        # 프로젝트에 필요한 라이브러리 설치
 
+      # 4. 프로젝트 빌드
       - name: Build project
         run: npm run build
+        # 빌드 명령어 실행 (build 디렉토리 생성)
 
+      # 5. S3 버킷에 업로드
       - name: Upload to S3
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ap-northeast-2
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }} # GitHub Secrets에 저장된 AWS Access Key
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # GitHub Secrets에 저장된 AWS Secret Key
+          AWS_REGION: ap-northeast-2 # AWS 리전 (서울)
         run: |
+          # S3 버킷에 빌드된 파일 업로드
           aws s3 sync ./build s3://app.cocabot.com --delete
+          # --delete 옵션: S3 버킷에서 로컬에 없는 파일 삭제
 
+      # 6. CloudFront 캐시 무효화
       - name: Invalidate CloudFront cache
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ap-northeast-2
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }} # GitHub Secrets에 저장된 AWS Access Key
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # GitHub Secrets에 저장된 AWS Secret Key
+          AWS_REGION: ap-northeast-2 # AWS 리전 (서울)
         run: |
+          # CloudFront 캐시 무효화 명령어 실행
           aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"
+          # YOUR_DISTRIBUTION_ID: CloudFront 배포 ID를 입력해야 함
 
