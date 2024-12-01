@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.example.rssreader.webviewmodule.HybridAppBridge
+import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
@@ -26,16 +27,15 @@ class MainActivity : ComponentActivity() {
         hybridAppBridge.initializeWebView(this)
 
         // 특정 URL 로드
-        val url = "https://app.cocabot.com" // 원하는 URL로 변경
+        val url = "https://app.cocabot.com"
+//        val url = "https://www.naver.com"
         hybridAppBridge.loadUrl(url)
 
         // Web으로 데이터 전달 예제
-        sendDataToWebExample()
-
-
-        webView.webViewClient = WebViewClient() // 링크 클릭 시 새 창이 아닌 WebView 내에서 열리도록 설정
-
-        webView.loadUrl("https://app.cocabot.com/") // 원하는 URL로 변경
+        sendDataToWebExample(
+            "key" to "value",
+            "key2" to "value2"
+        )
 
     }
 
@@ -62,12 +62,22 @@ class MainActivity : ComponentActivity() {
 //    }
 
     /**
-     * Web으로 데이터 전달 예제
+     * APP(client) -> Web(server) 데이터 전달
      */
-    private fun sendDataToWebExample() {
+    private fun sendDataToWebExample(vararg pairs: Pair<String, Any?>) {
+        /* 사용법 [ Map 처럼 생성해 JSON 생성 ]
+        * sendDataToWebExample(
+        *     "key" to "value",
+        *     "key2" to "value2"  ...
+        * )
+        * */
         val functionName = "receiveDataFromApp" // JavaScript 함수 이름
-        val data = "{\"key\":\"value\"}" // JSON 형식의 데이터
-        hybridAppBridge.sendDataToWeb(functionName, data)
+        val jsonObject = JSONObject()
+        for ((key, value) in pairs) {
+            jsonObject.put(key, value)
+        }
+
+        hybridAppBridge.sendDataToWeb(functionName, jsonObject)
     }
 
     /**
@@ -80,4 +90,5 @@ class MainActivity : ComponentActivity() {
             super.onBackPressed()
         }
     }
+
 }

@@ -1,12 +1,16 @@
 package com.example.rssreader.webviewmodule
 
 import android.content.Context
+import android.util.Log
 import android.webkit.JavascriptInterface
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.widget.Toast
+import org.json.JSONObject
 
 class HybridAppBridge(private val webView: WebView) {
 
@@ -14,6 +18,8 @@ class HybridAppBridge(private val webView: WebView) {
      * WebView 초기화
      * Web(client) -> APP(server) WebView 설정
      */
+    // Member value
+    private val BRIDGE_LOG_TAG = " - HybridAppBridge"
     fun initializeWebView(context: Context) {
         val webSettings: WebSettings = webView.settings
         webSettings.javaScriptEnabled = true // JavaScript 활성화
@@ -30,6 +36,7 @@ class HybridAppBridge(private val webView: WebView) {
         // WebView 클라이언트 설정
         webView.webViewClient = CustomWebViewClient()
         webView.webChromeClient = WebChromeClient()
+
     }
 
     /**
@@ -57,9 +64,13 @@ class HybridAppBridge(private val webView: WebView) {
      * @param functionName JavaScript 함수 이름
      * @param data 전달할 데이터 (JSON 형식)
      */
-    fun sendDataToWeb(jsFuncitonName: String, data: String) {
+    fun sendDataToWeb(jsFunctionName: String, sendingDataToWeb: JSONObject) {
         webView.post {
-            webView.evaluateJavascript("javascript:$jsFuncitonName('$data')",)
+            // JSON 문자열을 안전하게 이스케이프 처리
+            webView.evaluateJavascript("javascript:$jsFunctionName('$sendingDataToWeb')",
+                { result ->
+                    Log.d(BRIDGE_LOG_TAG, "Result from JavaScript: $result")
+                })
         }
     }
 
@@ -78,7 +89,7 @@ class HybridAppBridge(private val webView: WebView) {
         @JavascriptInterface
         fun logMessage(message: String) {
             // Web에서 전달받은 메시지를 로그로 출력
-            android.util.Log.d("WebAppInterface", message)
+            Log.d(" - HybridAppBridge", message)
         }
     }
 
@@ -88,7 +99,42 @@ class HybridAppBridge(private val webView: WebView) {
     private class CustomWebViewClient : WebViewClient() {
         override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
             // 모든 URL을 WebView에서 처리
-            return false
+            return false  // return true 면 외부 앱에서 처리
         }
+
+        override fun onPageFinished(view: WebView?, url: String?) {
+            super.onPageFinished(view, url)
+            val cookieManager = android.webkit.CookieManager.getInstance()
+            val cookies = cookieManager.getCookie(url)
+            Log.d(" - HybridAppBridge", "쿠키: $cookies")
+        }
+
+        override fun onLoadResource(view: WebView?, url: String?) {
+            super.onLoadResource(view, url)
+            Log.d("CustomWebViewClient", "리소스 로드: $url")
+        }
+
+        override fun onReceivedError(
+            view: WebView?,
+            errorCode: Int,
+            description: String?,
+            failingUrl: String?
+        ) {
+            super.onReceivedError(view, errorCode, description, failingUrl)
+            Log.e("CustomWebViewClient", "에러 발생: $description ($failingUrl)")
+            // 사용자에게 에러 메시지 표시
+            Toast.makeText(view?.context, "페이지 로딩 실패: $description", Toast.LENGTH_SHORT).show()
+        }
+
+        override fun onReceivedHttpError(
+            view: WebView?,
+            request: WebResourceRequest?,
+            errorResponse: WebResourceResponse?
+        ) {
+            super.onReceivedHttpError(view, request, errorResponse)
+            Log.e("CustomWebViewClient", "HTTP 에러 발생: ${errorResponse?.statusCode}")
+            // HTTP 에러 처리 (예: 404 페이지 표시)
+        }
+
     }
 }
