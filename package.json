@@ -14,10 +14,10 @@
     "react-transition-group": "^4.4.5"
   },
   "scripts": {
-    "start_origin": "react-scripts start",
-    "build_origin": "react-scripts build",
-    "start": "react-scripts --openssl-legacy-provider start",
-    "build": "react-scripts --openssl-legacy-provider build",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "start_old": "react-scripts --openssl-legacy-provider start",
+    "build_old": "react-scripts --openssl-legacy-provider build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
