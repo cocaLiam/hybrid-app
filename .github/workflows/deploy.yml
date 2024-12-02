@@ -31,6 +31,7 @@ jobs:
             echo "is_release=false" >> $GITHUB_ENV
             echo "Release_v 타입의 커밋이 아님"
             exit 0
+          fi
 
       # 4. 라이브러리 설치 (조건에 따라 실행)
       - name: Install dependencies
