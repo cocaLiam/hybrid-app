@@ -37,24 +37,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2 # 서울 리전
 
-      # 6. 조건 확인: 커밋 메시지가 Release_v* 패턴인지 확인
-      - name: Check commit message
-        id: check_commit
-        run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ ^Release_v[0-9]+\.[0-9]+$ ]]; then
-            echo "is_release=true" >> $GITHUB_ENV
-          else
-            echo "is_release=false" >> $GITHUB_ENV
-
-      # 7. S3에 업로드 (조건에 따라 실행)
+      # 6. S3에 업로드
       - name: Deploy to S3
-        if: env.is_release == 'true'
         run: |
           aws s3 sync ./build s3://app.cocabot.com --delete
-
-      # 8. CloudFront 캐시 무효화 (조건에 따라 실행)
       - name: Invalidate CloudFront cache
-        if: env.is_release == 'true'
         run: |
           aws cloudfront create-invalidation --distribution-id E1QI6AXVOT0ID4 --paths "/*"
-
