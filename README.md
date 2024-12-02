@@ -66,7 +66,7 @@ $ npm run build
 
 ### Local Test ( with hosted backend )
 ```bash
-$ npm install -g serve
+$ npm install -g serve  # serve 패키지를 전역(global)설치 <- 한번만 하면 됨
 $ serve -s build  # localhost:3000 으로 서버구성해서 build 디렉토리에 있는 코드 로컬실행
 ```
 
