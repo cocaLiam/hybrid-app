@@ -11,12 +11,16 @@ export const useHttpClient = () => {
 
   const sendRequest = useCallback(
     async (url, method = "GET", body = null, headers = {}) => {
-      // body 가 null 인 경우, headers 가 json 타입이면 fetch에 fail 한다.
-      console.log(`HTTP 요청 url --> ${method} }\n${url.substring(0, 22)} \n${url.substring(22, )}`);
 
-      // if (body !== null) {
-      //   headers = { "Content-Type": "application/json" };
-      // }
+      const parts = url.split('/');
+      const beforeThirdSlash = parts.slice(0, 3).join('/'); // 세 번째 '/' 전까지
+      const afterThirdSlash = '/' + parts.slice(3).join('/'); // 세 번째 '/' 이후
+
+      console.trace(" - 디버깅 : sendRequest 호출됨!");  // 호출 스택 출력
+      // body 가 null 인 경우, headers 가 json 타입이면 fetch에 fail 한다.
+      console.log(`HTTP 요청 url --> ${method} }\n
+        ${beforeThirdSlash}\n
+        ${afterThirdSlash}`);
       
       setIsLoading(true);
       const httpAbortCtrl = new AbortController();
