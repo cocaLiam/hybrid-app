@@ -37,8 +37,9 @@ ___
 #### 
 
 ### 환경변수 설명
-  - `.env` <- Local 전용
-  - `.env.production` <- 배포 전용
+  - `.env` <- Local Test ( with local backend )
+  - `.env.production` <- Local Test ( with hosted backend )
+  - `github에 "Actions secrets and variables"` <- AWS S3 버킷 업로드 코드 ( with hosted backend )
 
 ### Library 설치
 ```bash
