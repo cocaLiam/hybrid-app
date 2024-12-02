@@ -37,18 +37,23 @@ jobs:
         with:
           node-version: '20.17.0' # Node.js 버전 설정
 
-      # 4. 라이브러리 설치 (조건에 따라 실행)
-      - name: 4.Install dependencies
+      # 4. Actions secrets and variables 저장된 환경 변수를 .env.production 파일로 저장
+      - name: 4.Create .env.production file
+        run: |
+          echo "${{ secrets.ENV_PRODUCTION }}" > .env.production
+
+      # 5. 라이브러리 설치 (조건에 따라 실행)
+      - name: 5.Install dependencies
         if: env.is_release == 'true'
         run: npm install
 
-      # 5. 빌드 실행 (조건에 따라 실행)
-      - name: 5.Build the project
+      # 6. 빌드 실행 (조건에 따라 실행)
+      - name: 6.Build the project
         if: env.is_release == 'true'
         run: npm run build
 
-      # 6. AWS CLI 설정 (조건에 따라 실행)
-      - name: 6.Configure AWS credentials
+      # 7. AWS CLI 설정 (조건에 따라 실행)
+      - name: 7.Configure AWS credentials
         if: env.is_release == 'true'
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -56,14 +61,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2 # 서울 리전
 
-      # 7. S3에 업로드 (조건에 따라 실행)
-      - name: 7.Deploy to S3
+      # 8. S3에 업로드 (조건에 따라 실행)
+      - name: 8.Deploy to S3
         if: env.is_release == 'true'
         run: |
           aws s3 sync ./build s3://app.cocabot.com --delete
 
-      # 8. CloudFront 캐시 무효화 (조건에 따라 실행)
-      - name: 8.Invalidate CloudFront cache
+      # 9. CloudFront 캐시 무효화 (조건에 따라 실행)
+      - name: 9.Invalidate CloudFront cache
         if: env.is_release == 'true'
         run: |
           aws cloudfront create-invalidation --distribution-id E1QI6AXVOT0ID4 --paths "/*"

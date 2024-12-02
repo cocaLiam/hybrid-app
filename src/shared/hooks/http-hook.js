@@ -18,8 +18,8 @@ export const useHttpClient = () => {
 
       console.trace(" - 디버깅 : sendRequest 호출됨!");  // 호출 스택 출력
       // body 가 null 인 경우, headers 가 json 타입이면 fetch에 fail 한다.
-      console.log(`HTTP 요청 url --> ${method} }\n
-        ${beforeThirdSlash}\n
+      console.log(`HTTP 요청 url --> ${method} }
+        ${beforeThirdSlash}
         ${afterThirdSlash}`);
       
       setIsLoading(true);
