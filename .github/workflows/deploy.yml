@@ -11,40 +11,42 @@ jobs:
 
     steps:
       # 1. 레포지토리 체크아웃
-      - name: Checkout repository
+      - name: 1.Checkout repository
         uses: actions/checkout@v3
 
       # 2. Node.js 환경 설정
-      - name: Set up Node.js
+      - name: 2.Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20.17.0' # Node.js 버전 설정
 
       # 3. 조건 확인: 커밋 메시지가 Release_v* 패턴인지 확인
-      - name: Check commit message
+      - name: 3.Check commit message
         id: check_commit
         run: |
+          echo "커밋 메시지: ${{ github.event.head_commit.message }}"
           if [[ "${{ github.event.head_commit.message }}" =~ ^Release_v[0-9]+\.[0-9]+$ ]]; then
             echo "is_release=true" >> $GITHUB_ENV
-            echo "Release_v 타입의 커밋 발생"
+            echo "Release_v* 타입의 커밋 발생"
           else
             echo "is_release=false" >> $GITHUB_ENV
-            echo "Release_v 타입의 커밋이 아님"
-            exit 0
+            echo "Release_v* 타입의 커밋이 아님"
+            exit 1
           fi
+        shell: bash
 
       # 4. 라이브러리 설치 (조건에 따라 실행)
-      - name: Install dependencies
+      - name: 4.Install dependencies
         if: env.is_release == 'true'
         run: npm install
 
       # 5. 빌드 실행 (조건에 따라 실행)
-      - name: Build the project
+      - name: 5.Build the project
         if: env.is_release == 'true'
         run: npm run build
 
       # 6. AWS CLI 설정 (조건에 따라 실행)
-      - name: Configure AWS credentials
+      - name: 6.Configure AWS credentials
         if: env.is_release == 'true'
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -53,13 +55,13 @@ jobs:
           aws-region: ap-northeast-2 # 서울 리전
 
       # 7. S3에 업로드 (조건에 따라 실행)
-      - name: Deploy to S3
+      - name: 7.Deploy to S3
         if: env.is_release == 'true'
         run: |
           aws s3 sync ./build s3://app.cocabot.com --delete
 
       # 8. CloudFront 캐시 무효화 (조건에 따라 실행)
-      - name: Invalidate CloudFront cache
+      - name: 8.Invalidate CloudFront cache
         if: env.is_release == 'true'
         run: |
           aws cloudfront create-invalidation --distribution-id E1QI6AXVOT0ID4 --paths "/*"
