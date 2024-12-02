@@ -1,6 +1,5 @@
 name: Deploy to S3
 
-# FrontEndProd 브랜치에 Push 이벤트가 발생할 때 실행
 on:
   push:
     branches:
@@ -21,30 +20,36 @@ jobs:
         with:
           node-version: '20.17.0' # Node.js 버전 설정
 
-      # 3. 라이브러리 설치
-      - name: Install dependencies
-        run: npm install
-
-      # 4. 빌드 실행
-      - name: Build the project
-        run: npm run build
-
-      # 5. AWS CLI 설정
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2 # 서울 리전
-
-      # 6. 조건 확인: 커밋 메시지가 Release_v* 패턴인지 확인
+      # 3. 조건 확인: 커밋 메시지가 Release_v* 패턴인지 확인
       - name: Check commit message
         id: check_commit
         run: |
           if [[ "${{ github.event.head_commit.message }}" =~ ^Release_v[0-9]+\.[0-9]+$ ]]; then
             echo "is_release=true" >> $GITHUB_ENV
+            echo "Release_v 타입의 커밋 발생"
           else
             echo "is_release=false" >> $GITHUB_ENV
+            echo "Release_v 타입의 커밋이 아님"
+            exit 0
+
+      # 4. 라이브러리 설치 (조건에 따라 실행)
+      - name: Install dependencies
+        if: env.is_release == 'true'
+        run: npm install
+
+      # 5. 빌드 실행 (조건에 따라 실행)
+      - name: Build the project
+        if: env.is_release == 'true'
+        run: npm run build
+
+      # 6. AWS CLI 설정 (조건에 따라 실행)
+      - name: Configure AWS credentials
+        if: env.is_release == 'true'
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2 # 서울 리전
 
       # 7. S3에 업로드 (조건에 따라 실행)
       - name: Deploy to S3
