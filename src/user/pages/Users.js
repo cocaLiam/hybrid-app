@@ -34,13 +34,14 @@ const Users = () => {
       if (data.key2) {
         console.log("Key2:", data.key2);
       }
+      addDeviceHandler(`APP to Web : ${data}`)
     };
   }, [sendRequest]);
 
   // Android WebView의 showToast 호출
-  const addDeviceHandler = () => {
+  const addDeviceHandler = (msg) => {
     if (window.AndroidInterface && window.AndroidInterface.showToast) {
-      window.AndroidInterface.showToast("Device added successfully!");
+      window.AndroidInterface.showToast(msg);
     } else {
       console.log("AndroidInterface is not available.");
     }
@@ -56,7 +57,7 @@ const Users = () => {
       )}
       {!isLoading && loadedUsers && <UsersList items={loadedUsers} />}
       <div style={{ position: 'absolute', top: '10px', left: '10px' }}>
-        <button className="add-device-button" onClick={addDeviceHandler}>
+        <button className="add-device-button" onClick={() => addDeviceHandler("APP API : Web to APP")}>
           Add Device
         </button>
       </div>
