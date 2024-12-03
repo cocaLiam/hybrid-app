@@ -5,13 +5,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 
 import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.widget.Button
 import com.example.rssreader.webviewmodule.HybridAppBridge
 import org.json.JSONObject
+import android.util.Log
 
 class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
     private lateinit var hybridAppBridge: HybridAppBridge
+    private lateinit var buttonSendData: Button
+    private val MAIN_LOG_TAG = " - MainActivity "
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,6 +25,7 @@ class MainActivity : ComponentActivity() {
 
         // WebView 초기화
         webView = findViewById(R.id.webView) // activity_main.xml에 정의된 WebView ID
+        buttonSendData = findViewById(R.id.buttonSendData)
         hybridAppBridge = HybridAppBridge(webView)
 
         // WebView 설정
@@ -31,11 +36,13 @@ class MainActivity : ComponentActivity() {
 //        val url = "https://www.naver.com"
         hybridAppBridge.loadUrl(url)
 
-        // Web으로 데이터 전달 예제
-        sendDataToWebExample(
-            "key" to "value",
-            "key2" to "value2"
-        )
+        buttonSendData.setOnClickListener{
+            // Web으로 데이터 전달 예제
+            sendDataToWebExample(
+                "key" to "value",
+                "key2" to "value2")
+            Log.i(MAIN_LOG_TAG, "Send Data")
+        }
 
     }
 
