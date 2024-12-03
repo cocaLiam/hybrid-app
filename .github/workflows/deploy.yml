@@ -39,6 +39,7 @@ jobs:
 
       # 4. Actions secrets and variables 저장된 환경 변수를 .env.production 파일로 저장
       - name: 4.Create .env.production file
+        if: env.is_release == 'true'
         run: |
           echo "${{ secrets.ENV_PRODUCTION }}" > .env.production
 
