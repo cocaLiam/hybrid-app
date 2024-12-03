@@ -105,6 +105,7 @@ ___
 ### AWS S3 업로드
   - `https://eu-north-1.console.aws.amazon.com/s3/home?region=eu-north-1#` 
   - 해당링크에서 APP 전용 도메인 버킷에 업로드
+  - FrontEndProd에 `Release_v*.*` 커밋명으로 푸시 ( Git Action -> IAM 자동 업로드 )
 
 ___
 
