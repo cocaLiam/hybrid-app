@@ -23,6 +23,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.BluetoothLeScanner
@@ -63,10 +64,15 @@ class BleController(private val applicationContext: Context) {
 //    private val WRITE_CHARACTERISTIC_UUID = UUID.fromString("00002a4e-0000-1000-8000-00805f9b34fb") //
 //    private val READ_CHARACTERISTIC_UUID = UUID.fromString("00002a4d-0000-1000-8000-00805f9b34fb") //
 
-    // pic32cx-bz 읽기 특성
-    private val SERVICE_UUID =              UUID.fromString("4d434850-5255-42d0-aef8-881facf4ceea")
-    private val WRITE_CHARACTERISTIC_UUID = UUID.fromString("4d434850-5255-42d0-aef8-881fccf4ceea")
-    private val READ_CHARACTERISTIC_UUID =  UUID.fromString("4d434850-5255-42d0-aef8-881fbcf4ceea")
+//    // pic32cx-bz 읽기 특성
+//    private val SERVICE_UUID =              UUID.fromString("4d434850-5255-42d0-aef8-881facf4ceea")
+//    private val WRITE_CHARACTERISTIC_UUID = UUID.fromString("4d434850-5255-42d0-aef8-881fccf4ceea")
+//    private val READ_CHARACTERISTIC_UUID =  UUID.fromString("4d434850-5255-42d0-aef8-881fbcf4ceea")
+
+    // TRS Service ( peri_uart )
+    private val SERVICE_UUID =              UUID.fromString("49535343-fe7d-4ae5-8fa9-9fafd205e455")
+    private val WRITE_CHARACTERISTIC_UUID = UUID.fromString("49535343-8841-43F4-A8D4-ECBE34729BB3")
+    private val READ_CHARACTERISTIC_UUID =  UUID.fromString("49535343-1e4d-4bd9-ba61-23c647249616")
 
     // ActivityResultLauncher를 클래스의 멤버 변수로 선언
     private lateinit var enableBluetoothLauncher: ActivityResultLauncher<Intent>
@@ -314,7 +320,13 @@ class BleController(private val applicationContext: Context) {
                                 ) {
                                     try {
                                         gatt.setCharacteristicNotification(readCharacteristic, true)
-                                        Log.d(BLECONT_LOG_TAG, "읽기 특성에 대한 알림 활성화")
+
+                                        // CCCD 설정 // Subscribe 요청 --> IoT
+                                        val descriptor = readCharacteristic!!.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"))
+                                        descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                                        gatt.writeDescriptor(descriptor)
+                                        Log.d(BLECONT_LOG_TAG, "읽기 특성에 대한 Notification 활성화 완료")
+
                                     } catch (e: SecurityException) {
                                         Log.e(BLECONT_LOG_TAG, "BLUETOOTH_CONNECT 권한이 없어 알림을 활성화할 수 없습니다.")
                                         useToastOnSubThread("BLUETOOTH_CONNECT 권한이 없어 알림을 활성화할 수 없습니다.")
@@ -326,7 +338,13 @@ class BleController(private val applicationContext: Context) {
                             } else {
                                 try {
                                     gatt.setCharacteristicNotification(readCharacteristic, true)
-                                    Log.d(BLECONT_LOG_TAG, "읽기 특성에 대한 알림 활성화")
+
+                                    // CCCD 설정 // Subscribe 요청 --> IoT
+                                    val descriptor = readCharacteristic!!.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"))
+                                    descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                                    gatt.writeDescriptor(descriptor)
+                                    Log.d(BLECONT_LOG_TAG, "읽기 특성에 대한 Notification 활성화 완료")
+
                                 } catch (e: SecurityException) {
                                     Log.e(BLECONT_LOG_TAG, "BLUETOOTH_CONNECT 권한이 없어 알림을 활성화할 수 없습니다.")
                                     useToastOnSubThread("BLUETOOTH_CONNECT 권한이 없어 알림을 활성화할 수 없습니다.")
@@ -351,12 +369,12 @@ class BleController(private val applicationContext: Context) {
             // 읽기 특성에 대한 알림(Notification)이 활성화된 경우, 데이터가 수신될 때 호출되는 콜백
             override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
                 super.onCharacteristicChanged(gatt, characteristic)
-                Log.i(BLECONT_LOG_TAG, "수신된 데이터: $characteristic")
                 if (characteristic.uuid == READ_CHARACTERISTIC_UUID) {
                     val receivedData = characteristic.value // 수신된 데이터
                     receivedString = String(receivedData) // ByteArray를 문자열로 변환
+                    Log.i(BLECONT_LOG_TAG, "수신된 데이터: $characteristic")
+                    // LiveData 업데이트
                     updateReadData(receivedString)
-
                     // Toast로 수신된 데이터 표시
                     useToastOnSubThread("Received Data: $receivedString")
                 }
