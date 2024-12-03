@@ -26,14 +26,6 @@ const Users = () => {
     // Android WebView에서 호출할 수 있도록 window 객체에 함수 등록
     window.receiveDataFromApp = (data) => {
       console.log("Received data from app:", data);
-
-      // JSON 데이터를 파싱하여 특정 키의 값을 출력
-      if (data.key) {
-        console.log("Key:", data.key);
-      }
-      if (data.key2) {
-        console.log("Key2:", data.key2);
-      }
       addDeviceHandler(`APP to Web : ${data}`)
     };
   }, [sendRequest]);
